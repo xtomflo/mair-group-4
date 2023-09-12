@@ -24,11 +24,44 @@ Week 1 Deliverables
     - [x]LogisticRegression
     - ??
 4. Create a Prompt to enter a new sentence and classify this sentence and repeat the prompt until the user exits.
+    - [x] done and using logistic regression to predict
     
-## TO DO:
+# TO DO:
 
+    - Baseline Model 2
+    - Implement Another Classifier
+    - Report?  We have first results which can be added there. 
+        - Reasoning for why the de-duplicated have lower score? 
+        - Why we get such good results with logistic regression? ¯\_(ツ)_/¯ 
+        - Others? 
+## Current Results - 12.09.23
+```
+Full Dataset Predictions: 
+-----------------------------------------------
+Results for Model -> Baseline 1
+ Accuracy Score: 0.40
+ Precision Score: 0.76
+ Recall Score: 0.40
+ F1 Score: 0.23
+Results for Model -> Logistic Regression
+ Accuracy Score: 0.98
+ Precision Score: 0.98
+ Recall Score: 0.98
+ F1 Score: 0.98
 
-
+De-Duplicated Dataset Predictions: 
+-----------------------------------------------
+Results for Model -> Baseline 1
+ Accuracy Score: 0.56
+ Precision Score: 0.75
+ Recall Score: 0.56
+ F1 Score: 0.40
+Results for Model -> Logistic Regression
+ Accuracy Score: 0.90
+ Precision Score: 0.89
+ Recall Score: 0.90
+ F1 Score: 0.89
+```
 # Instructions 
 ```
 We're assuming Python 3.10 is installed, together with pip 23.0.1

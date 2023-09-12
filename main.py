@@ -8,7 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-# Encoder and Vectorizer are used globally
+# Encoder and Vectorizer are used globally(in different functions), so defining here
 le = LabelEncoder() 
 vectorizer = CountVectorizer(binary=True, strip_accents='unicode',
                                     max_features=90000)
@@ -19,17 +19,16 @@ def load_file(file_path:str = "dialog_acts.dat") -> pd.DataFrame:
     labels = []
     utterances = []
 
-    # Read the file line by line
-
+    # Read the file line by line and pick labels & utterances into separate lists
     with open(file_path, "r") as f:
         for line in f:
             # Split each line into label and utterance
-            parts = line.strip().split(" ", 1)
+            parts = line.strip().split(" ", 1)  # Split by first " " - space
             label, utterance = parts
             labels.append(label)
             utterances.append(utterance)
 
-    # Create a Pandas DataFrame
+    # Create a Pandas DataFrame from the lists
     df = pd.DataFrame({
         'label': labels,
         'utterance': utterances
@@ -48,7 +47,7 @@ def convert_to_lowercase(df:pd.DataFrame):
 
 
 def split_dataset(df:pd.DataFrame):
-
+# Split into 85% training & 15% test data 
     X_train, X_test, y_train, y_test = train_test_split(df['utterance'], df['label'], test_size=0.15, random_state=42)
 
     return (X_train, X_test, y_train, y_test)
@@ -63,6 +62,7 @@ def preprocess(df:pd.DataFrame):
     # Fit the encoder with a list of all labels
     le.fit(df['label'].unique()) 
     # Replace the labels with encodings
+    df = df.copy() # To mute warnings
     df['label'] = le.transform(df['label'])
 
     # Fit the vectorizer with utterances
@@ -74,7 +74,7 @@ def preprocess(df:pd.DataFrame):
     X_train_vec = vectorizer.transform(X_train)
     X_test_vec = vectorizer.transform(X_test)
 
-    # Baseline models need non-vectorized utterences, ML models need vectors
+    # Baseline models need non-vectorized utterences, ML models need vectors so returning both types
     return X_train, X_test, y_train, y_test, X_train_vec, X_test_vec
 
 
@@ -82,13 +82,40 @@ def baseline_model_1(X_test):
     # Baseline model No. 1
     # Assume all utterances are "inform" - the most common label.
     
-    # Create an array with length of X_test (all test cases) and fill with label "inform", encoded as 6  
+    # Create an array with length of X_test (all test cases) and fill with encoded version of label "inform"
     inform_encoding = le.transform(['inform'])[0]
     y_predicted = np.full(len(X_test), inform_encoding)
 
     return y_predicted
 
 def baseline_model_2(X_test):
+    # TODO 
+    # Baseline model 2
+    # ack	- "okay" "aha"
+    # affirm	- "yes"
+    # bye	- "bye", "goodbye"
+    # confirm	 - "is it" "was it"
+    # deny	- "no" "dont" "don't" "won't"
+    # hello	 - "hello" "hi"
+    # inform	- "price" "north" "east" "south" "west" "chinese" "type" "mexican" "thai" "cheap" "expensive"
+    # negate - "no"
+    # null	- "cough"
+    # repeat	- "repeat"
+    # reqalts	- "how"
+    # reqmore	request more suggestions	more
+    # request	ask for information	what is the post code
+    # restart	attempt to restart the dialog	okay start over
+    # thankyou	express thanks	thank you good bye
+
+
+    # Let's not overthink it, it's just the baseline - dummy is fine. 
+    # DEF List of ACK keywords
+    # DEF List of Affirm keywords
+    # .....
+    #
+    # Go through the X_test row by row. 
+    # IF keyword for ack exists in the sentence, apply the ack label. 
+    # ELSE IF keyword for affirm exists in the sentence, apply affirm label
     return 
     
     
@@ -98,8 +125,11 @@ def train_logistic_regression(X_train_vec, y_train):
     classifier = LogisticRegression(max_iter = 1000)
     classifier.fit(X_train_vec, y_train)
 
-
     return classifier
+
+def train_XYZ_classifier(X_train_vec, y_train):
+    
+    return 0
 
 def assess_performance(y_test, y_predicted, model_name):
     
@@ -121,6 +151,9 @@ def predictions_process(df:pd.DataFrame):
     y_baseline_1 = baseline_model_1(X_test)
     assess_performance(y_test, y_baseline_1, "Baseline 1")
     
+    # y_baseline_2 = baseline_model2(X_test)
+    # ...
+    
     log_reg = train_logistic_regression(X_train_vec, y_train)
     y_log_reg = log_reg.predict(X_test_vec)
     assess_performance(y_test, y_log_reg, "Logistic Regression")
@@ -140,8 +173,8 @@ def main():
 
     df = convert_to_lowercase(df)
     
-    df_deduplicated = df.drop_duplicates()
     df_full = df
+    df_deduplicated = df.drop_duplicates()
 
     print("Full Dataset Predictions: ")
     print("-----------------------------------------------")
