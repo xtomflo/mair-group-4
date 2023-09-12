@@ -30,7 +30,15 @@ Week 1 Deliverables
 
 
 # Instructions 
-To run the program navigate to this projects folder in the terminal and run:
+```
+We're assuming Python 3.10 is installed, together with pip 23.0.1
+```
+1. Make sure you have the required libraries installed
+```
+pip3 install --requirement requirements.txt
+```
+
+2. To run the program navigate to this projects folder in the terminal and run:
 ```
 > python load_dialog_act.py dialog-act.dat
 ```
