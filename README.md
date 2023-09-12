@@ -21,10 +21,12 @@ Week 1 Deliverables
     - [x] regardless of the content of the utterance, always assigns the majority class of in the data. ( Inform ) which is 40% 
     - [ ] baseline rule-based system based on keyword matching. An example rule could be: anytime an utterance contains ‘goodbye’, it would be classified with the dialog act bye
 3. Create classifiers 
-    - [x]LogisticRegression
-    - ??
+    - [x] LogisticRegression
+    - [ ] Another Classifier
+    - [ ] Third Classifier? 
 4. Create a Prompt to enter a new sentence and classify this sentence and repeat the prompt until the user exits.
     - [x] done and using logistic regression to predict
+    - [ ] predicting with Another Classifier
     
 # TO DO:
 
