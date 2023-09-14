@@ -2,6 +2,7 @@ import sys
 import pandas as pd
 import numpy as np
 
+from collections import defaultdict
 from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
@@ -116,7 +117,47 @@ def baseline_model_2(X_test):
     # Go through the X_test row by row. 
     # IF keyword for ack exists in the sentence, apply the ack label. 
     # ELSE IF keyword for affirm exists in the sentence, apply affirm label
-    return 
+    keyWords=defaultdict(set)
+    dict = defaultdict(set)
+    keyWords['ack']=["okay","aha"]
+    keyWords['affirm']=["yes"]
+    keyWords['bye']=["bye", "goodbye"]
+    keyWords['confirm']=["is it","was it"]
+    keyWords['deny']=["no" ,"dont", "don't" ,"won't"]
+    keyWords['hello']=["hello" ,"hi"]
+    keyWords['inform']=["price","north","east","south","west","chinese" ,"type" ,"mexican", "thai" ,"cheap" ,"expensive"]
+    keyWords['negate']=["no"]
+    keyWords['null']=["cough"]
+    keyWords['repeat']=["repeat","again"]
+    keyWords['reqalts']=["how"]
+    keyWords['reqmore']=["more"]
+    keyWords['request']=["postcode","address"]
+    keyWords['restart']=["restart"]
+    keyWords['thankyou']=["thanks"]
+
+    for k in keyWords.keys():
+        for v in keyWords[k]:
+            if v not in dict[le.transform([k])[0]]:
+                dict[le.transform([k])[0]].add(v)
+    inform_encoding = le.transform(['inform'])[0]
+    y_predicted = np.full(len(X_test), -1)
+    cnt=0
+    for sent in X_test:
+        label=None
+        words=sent.split(' ')
+        for w in words:
+            for k in keyWords.keys():
+                if w in keyWords[k]:
+                    label=k
+                    break
+        if label is None:
+            y_predicted[cnt]=inform_encoding
+        else:
+            encoding = le.transform([label])[0]
+            y_predicted[cnt]=encoding
+        cnt+=1
+
+    return y_predicted
     
     
 def train_logistic_regression(X_train_vec, y_train):
@@ -151,12 +192,13 @@ def predictions_process(df:pd.DataFrame):
     y_baseline_1 = baseline_model_1(X_test)
     assess_performance(y_test, y_baseline_1, "Baseline 1")
     
-    # y_baseline_2 = baseline_model2(X_test)
+    y_baseline_2 = baseline_model_2(X_test)
+    assess_performance(y_test, y_baseline_2, "Baseline 2")
     # ...
     
-    log_reg = train_logistic_regression(X_train_vec, y_train)
-    y_log_reg = log_reg.predict(X_test_vec)
-    assess_performance(y_test, y_log_reg, "Logistic Regression")
+    #log_reg = train_logistic_regression(X_train_vec, y_train)
+    #y_log_reg = log_reg.predict(X_test_vec)
+    #ssess_performance(y_test, y_log_reg, "Logistic Regression")
     
     
 def main():
@@ -185,7 +227,7 @@ def main():
     print("-----------------------------------------------")
     
     predictions_process(df_deduplicated)
-
+    
     
     while True:
         custom_message = input("Enter a custom message (or type 'exit' to quit): ").lower()
