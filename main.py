@@ -4,6 +4,8 @@ import numpy as np
 
 from sklearn.preprocessing import LabelEncoder
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
@@ -14,7 +16,7 @@ vectorizer = CountVectorizer(binary=True, strip_accents='unicode',
                                     max_features=90000)
 
 def load_file(file_path:str = "dialog_acts.dat") -> pd.DataFrame:
-
+# 
     # Initialize empty lists to store labels and utterances
     labels = []
     utterances = []
@@ -122,14 +124,25 @@ def baseline_model_2(X_test):
 def train_logistic_regression(X_train_vec, y_train):
 
     # 1000 because with default (100) MAX_ITER warning was reached
-    classifier = LogisticRegression(max_iter = 1000)
-    classifier.fit(X_train_vec, y_train)
+    log_regression = LogisticRegression(max_iter = 1000)
+    log_regression.fit(X_train_vec, y_train)
 
-    return classifier
+    return log_regression
 
-def train_XYZ_classifier(X_train_vec, y_train):
+
+def train_decisionTree(X_train_vec, y_train):
+    decision_tree = DecisionTreeClassifier(random_state=42, max_depth=18)
+    decision_tree = decision_tree.fit(X_train_vec, y_train)
+
+    return decision_tree
+
+def train_knn(X_train_vec, y_train):
     
-    return 0
+    knn = KNeighborsClassifier(n_neighbors=147) #Choose K according rule: sqrt(N) where N is number of instances
+    knn.fit(X_train_vec, y_train)
+    
+    return knn
+
 
 def assess_performance(y_test, y_predicted, model_name):
     
@@ -158,6 +171,18 @@ def predictions_process(df:pd.DataFrame):
     y_log_reg = log_reg.predict(X_test_vec)
     assess_performance(y_test, y_log_reg, "Logistic Regression")
     
+    decision_tree = train_decisionTree(X_train_vec, y_train)
+    y_decision_tree = decision_tree.predict(X_test_vec)
+    assess_performance(y_test, y_decision_tree, "Decision Tree")
+    
+    knn = train_decisionTree(X_train_vec, y_train)
+    y_knn = decision_tree.predict(X_test_vec)
+    assess_performance(y_test, y_knn, "K-Nearest Neighbors")
+    
+    
+
+    y_pred_KNN = neigh.predict(X_test_vec)
+
     
 def main():
     # Main function running the whole process and asking for user input
