@@ -207,29 +207,25 @@ def predictions_process(df:pd.DataFrame):
     
     y_baseline_2 = baseline_model_2(X_test)
     assess_performance(y_test, y_baseline_2, "Baseline 2")
-    # ...
     
-    #log_reg = train_logistic_regression(X_train_vec, y_train)
-    #y_log_reg = log_reg.predict(X_test_vec)
-    #ssess_performance(y_test, y_log_reg, "Logistic Regression")
+    log_reg = train_logistic_regression(X_train_vec, y_train)
+    y_log_reg = log_reg.predict(X_test_vec)
+    assess_performance(y_test, y_log_reg, "Logistic Regression")
     
     decision_tree = train_decisionTree(X_train_vec, y_train)
     y_decision_tree = decision_tree.predict(X_test_vec)
     assess_performance(y_test, y_decision_tree, "Decision Tree")
     
-    knn = train_decisionTree(X_train_vec, y_train)
-    y_knn = decision_tree.predict(X_test_vec)
+    knn = train_knn(X_train_vec, y_train)
+    y_knn = knn.predict(X_test_vec)
     assess_performance(y_test, y_knn, "K-Nearest Neighbors")
     
-    
-
-    y_pred_KNN = neigh.predict(X_test_vec)
-
+    return log_reg
     
 def main():
     # Main function running the whole process and asking for user input
     if len(sys.argv) < 2:
-        print("Usage: python script.py <path_to_dialog-act.dat>")
+        print("Usage: python main.py <path_to_dialog-act.dat>")
         return
 
     file_path = sys.argv[1]
@@ -246,7 +242,9 @@ def main():
     print("Full Dataset Predictions: ")
     print("-----------------------------------------------")
 
-    predictions_process(df_full)
+    # Take Logistic Regression as the best model for future predictions
+    log_reg = predictions_process(df_full)
+    
     
     print("De-Duplicated Dataset Predictions: ")
     print("-----------------------------------------------")
@@ -268,7 +266,7 @@ def main():
             prediction_label = le.inverse_transform(prediction_1d)
             
             print(f"You entered: {custom_message}")
-            print(f"Predicted Label is: {prediction_label[0]}")
+            print(f"Predicted Label using Logistic Regresssion is: {prediction_label[0]}")
     
     
 if __name__ == "__main__":
