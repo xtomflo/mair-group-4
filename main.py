@@ -17,7 +17,8 @@ vectorizer = CountVectorizer(binary=True, strip_accents='unicode',
                                     max_features=90000)
 
 def load_file(file_path:str = "dialog_acts.dat") -> pd.DataFrame:
-# 
+# Load the file with labels in utterances
+
     # Initialize empty lists to store labels and utterances
     labels = []
     utterances = []
@@ -26,7 +27,7 @@ def load_file(file_path:str = "dialog_acts.dat") -> pd.DataFrame:
     with open(file_path, "r") as f:
         for line in f:
             # Split each line into label and utterance
-            parts = line.strip().split(" ", 1)  # Split by first " " - space
+            parts = line.lower().strip().split(" ", 1)  # Split by first " " - space
             label, utterance = parts
             labels.append(label)
             utterances.append(utterance)
@@ -38,22 +39,6 @@ def load_file(file_path:str = "dialog_acts.dat") -> pd.DataFrame:
     })
 
     return df
-
-
-# Converts all the columns in the DataFrame to lowercase
-def convert_to_lowercase(df:pd.DataFrame):
-
-    df.label = df.label.str.lower()
-    df.utterance = df.utterance.str.lower()
-
-    return df
-
-
-def split_dataset(df:pd.DataFrame):
-# Split into 85% training & 15% test data 
-    X_train, X_test, y_train, y_test = train_test_split(df['utterance'], df['label'], test_size=0.15, random_state=42)
-
-    return (X_train, X_test, y_train, y_test)
 
 
 def preprocess(df:pd.DataFrame):
@@ -71,7 +56,7 @@ def preprocess(df:pd.DataFrame):
     # Fit the vectorizer with utterances
     vectorizer.fit(df['utterance'])
 
-    X_train, X_test, y_train, y_test = split_dataset(df)
+    X_train, X_test, y_train, y_test = train_test_split(df['utterance'], df['label'], test_size=0.15, random_state=42)
 
     # Vectorized train & test utterances
     X_train_vec = vectorizer.transform(X_train)
@@ -161,41 +146,17 @@ def baseline_model_2(X_test):
 
     return y_predicted
     
-    
-def train_logistic_regression(X_train_vec, y_train):
-
-    # 1000 because with default (100) MAX_ITER warning was reached
-    log_regression = LogisticRegression(max_iter = 1000)
-    log_regression.fit(X_train_vec, y_train)
-
-    return log_regression
-
-
-def train_decisionTree(X_train_vec, y_train):
-    decision_tree = DecisionTreeClassifier(random_state=42, max_depth=18)
-    # TODO explain why 18
-    # We did an analysis, calculated the number based on some formula. 
-    decision_tree = decision_tree.fit(X_train_vec, y_train)
-
-    return decision_tree
-
-def train_knn(X_train_vec, y_train):
-    
-    knn = KNeighborsClassifier(n_neighbors=147) #Choose K according rule: sqrt(N) where N is number of instances
-    knn.fit(X_train_vec, y_train)
-    
-    return knn
-
 
 def assess_performance(y_test, y_predicted, model_name):
-    
+# Calculate metrics for the given model predictions
+
     print(f"Results for Model -> {model_name}")
     
     # Print different scores up to 2 decimal points (.2f)
     precision = precision_score(y_test, y_predicted, average='macro', zero_division=1)
     recall = recall_score(y_test, y_predicted, average='macro')
     f1_score =  2 * precision * recall / (precision + recall)
-
+    
     print(f" Accuracy Score: {accuracy_score(y_test, y_predicted):.2f}")
     print(f" Precision Score: {precision:.2f}")
     print(f" Recall Score: {recall:.2f}")
@@ -204,7 +165,8 @@ def assess_performance(y_test, y_predicted, model_name):
 
 
 def predictions_process(df:pd.DataFrame):
-    
+# Go through the prediction process for a given DataFrame
+
     X_train, X_test, y_train, y_test, X_train_vec, X_test_vec = preprocess(df)
     
     
@@ -214,19 +176,25 @@ def predictions_process(df:pd.DataFrame):
     y_baseline_2 = baseline_model_2(X_test)
     assess_performance(y_test, y_baseline_2, "Baseline 2")
     
-    log_reg = train_logistic_regression(X_train_vec, y_train)
-    y_log_reg = log_reg.predict(X_test_vec)
+    # 1000 because with default (100) MAX_ITER warning was reached
+    log_regression = LogisticRegression(max_iter = 1000)
+    log_regression.fit(X_train_vec, y_train)
+    y_log_reg = log_regression.predict(X_test_vec)
     assess_performance(y_test, y_log_reg, "Logistic Regression")
     
-    decision_tree = train_decisionTree(X_train_vec, y_train)
+    decision_tree = DecisionTreeClassifier(random_state=42, max_depth=18)
+    # TODO explain why 18
+    # We did an analysis, calculated the number based on some formula. 
+    decision_tree = decision_tree.fit(X_train_vec, y_train)
     y_decision_tree = decision_tree.predict(X_test_vec)
     assess_performance(y_test, y_decision_tree, "Decision Tree")
     
-    knn = train_knn(X_train_vec, y_train)
+    knn = KNeighborsClassifier(n_neighbors=147) #Choose K according rule: sqrt(N) where N is number of instances
+    knn.fit(X_train_vec, y_train)
     y_knn = knn.predict(X_test_vec)
     assess_performance(y_test, y_knn, "K-Nearest Neighbors")
     
-    return log_reg, decision_tree, knn
+    return log_regression, decision_tree, knn
     
 def main():
     # Main function running the whole process and asking for user input
@@ -239,8 +207,6 @@ def main():
     
     print("Loaded DataFrame:")
     print(df.head())
-
-    df = convert_to_lowercase(df)
     
     df_full = df
     df_deduplicated = df.drop_duplicates()
@@ -251,12 +217,10 @@ def main():
     # Take Logistic Regression as the best model for future predictions
     log_reg, decision_tree, knn = predictions_process(df_full)
     
-    
     print("De-Duplicated Dataset Predictions: ")
     print("-----------------------------------------------")
     
     predictions_process(df_deduplicated)
-    
     
     while True:
         custom_message = input("Enter a custom message (or type 'exit' to quit): ").lower()
