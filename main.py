@@ -173,6 +173,8 @@ def train_logistic_regression(X_train_vec, y_train):
 
 def train_decisionTree(X_train_vec, y_train):
     decision_tree = DecisionTreeClassifier(random_state=42, max_depth=18)
+    # TODO explain why 18
+    # We did an analysis, calculated the number based on some formula. 
     decision_tree = decision_tree.fit(X_train_vec, y_train)
 
     return decision_tree
@@ -190,8 +192,8 @@ def assess_performance(y_test, y_predicted, model_name):
     print(f"Results for Model -> {model_name}")
     
     # Print different scores up to 2 decimal points (.2f)
-    precision = precision_score(y_test, y_predicted, average='weighted', zero_division=1)
-    recall = recall_score(y_test, y_predicted, average='weighted')
+    precision = precision_score(y_test, y_predicted, average='macro', zero_division=1)
+    recall = recall_score(y_test, y_predicted, average='macro')
     f1_score =  2 * precision * recall / (precision + recall)
 
     print(f" Accuracy Score: {accuracy_score(y_test, y_predicted):.2f}")
@@ -224,7 +226,7 @@ def predictions_process(df:pd.DataFrame):
     y_knn = knn.predict(X_test_vec)
     assess_performance(y_test, y_knn, "K-Nearest Neighbors")
     
-    return log_reg
+    return log_reg, decision_tree, knn
     
 def main():
     # Main function running the whole process and asking for user input
@@ -247,7 +249,7 @@ def main():
     print("-----------------------------------------------")
 
     # Take Logistic Regression as the best model for future predictions
-    log_reg = predictions_process(df_full)
+    log_reg, decision_tree, knn = predictions_process(df_full)
     
     
     print("De-Duplicated Dataset Predictions: ")
@@ -271,6 +273,21 @@ def main():
             
             print(f"You entered: {custom_message}")
             print(f"Predicted Label using Logistic Regresssion is: {prediction_label[0]}")
+            
+            
+            prediction = decision_tree.predict(custom_message_vec)
+            prediction_1d = np.array([prediction]).ravel() # Change shape to pacify a warning from LabelEncoder
+            prediction_label = le.inverse_transform(prediction_1d)
+            
+            print(f"You entered: {custom_message}")
+            print(f"Predicted Label using Decision Tree is: {prediction_label[0]}")
+            
+            prediction = knn.predict(custom_message_vec)
+            prediction_1d = np.array([prediction]).ravel() # Change shape to pacify a warning from LabelEncoder
+            prediction_label = le.inverse_transform(prediction_1d)
+            
+            print(f"You entered: {custom_message}")
+            print(f"Predicted Label using KNN is: {prediction_label[0]}")
     
     
 if __name__ == "__main__":
