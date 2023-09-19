@@ -190,10 +190,14 @@ def assess_performance(y_test, y_predicted, model_name):
     print(f"Results for Model -> {model_name}")
     
     # Print different scores up to 2 decimal points (.2f)
+    precision = precision_score(y_test, y_predicted, average='weighted', zero_division=1)
+    recall = recall_score(y_test, y_predicted, average='weighted')
+    f1_score =  2 * precision * recall / (precision + recall)
+
     print(f" Accuracy Score: {accuracy_score(y_test, y_predicted):.2f}")
-    print(f" Precision Score: {precision_score(y_test, y_predicted, average='weighted', zero_division=1):.2f}")
-    print(f" Recall Score: {recall_score(y_test, y_predicted, average='weighted'):.2f}")
-    print(f" F1 Score: {f1_score(y_test, y_predicted, average='weighted'):.2f}")
+    print(f" Precision Score: {precision:.2f}")
+    print(f" Recall Score: {recall:.2f}")
+    print(f" F1 Score: {f1_score:.2f}")
 
 
 
@@ -225,8 +229,8 @@ def predictions_process(df:pd.DataFrame):
 def main():
     # Main function running the whole process and asking for user input
     if len(sys.argv) < 2:
-        print("Usage: python main.py <path_to_dialog-act.dat>")
-        return
+        print("To specify a different input file use: python main.py <path_to_dialog-act.dat>")
+        
 
     file_path = sys.argv[1]
     df = load_file(file_path)
