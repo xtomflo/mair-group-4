@@ -37,7 +37,7 @@ class RestaurantRecommender:
         'international', 'traditional', 'mediterranean', 'polynesian',
         'african', 'turkish', 'bistro', 'north american', 'australasian',
         'persian', 'jamaican', 'lebanese', 'cuban', 'japanese', 'catalan']
-        location = ['west', 'north', 'south', 'centre', 'east']
+        areas = ['west', 'north', 'south', 'centre', 'east']
         price_range = ['moderate', 'expensive', 'cheap']
         
         
@@ -45,21 +45,22 @@ class RestaurantRecommender:
         for food in food_types:
             if fuzzy_keyword_match(food, utterance):
                 self.food_type = food
+                print(f"Food updated {food}!")
                 break
 
-        # Check for locations
-        for location in locations:
-            if fuzzy_keyword_match(location, utterance):
-                self.location = location
+        # Check for area
+        for area in areas:
+            if fuzzy_keyword_match(area, utterance):
+                self.area = area
+                print(f"Area updated {area}!")
                 break
 
         # Check for price range
         for price in price_range:
             if fuzzy_keyword_match(price, utterance):
                 self.price_range = price
+                print(f"Price_Range updated {price}!")
                 break
-
-        return preferences
 
     def predict_dialog_act(utterance):
         custom_message_vec = vectorizer.transform([utterance])
@@ -89,7 +90,7 @@ class RestaurantRecommender:
                     self.state = 'Ask for area'
 
             elif self.state == 'Ask for area':
-                # Placeholder for TALK logic (user interaction)
+                # Placeholder for TALK logic 
                 utterance = input("What is your preferred area?")
                 self.extract_preferences(utterance)
                 self.state = 'Area expressed?'
@@ -102,7 +103,7 @@ class RestaurantRecommender:
                     self.state = 'Ask for food type'
 
             elif self.state == 'Ask for food type':
-                # Placeholder for TALK logic (user interaction)
+                # Placeholder for TALK logic 
                 utterance = input("Please enter your preferred food type: ")
                 self.extract_preferences(utterance)
 
@@ -116,7 +117,7 @@ class RestaurantRecommender:
                     self.state = 'Ask for price range'
 
             elif self.state == 'Ask for price range':
-                # Placeholder for TALK logic (user interaction)
+                # Placeholder for TALK logic 
                 utterance = input("Please enter your preferred price range: ")
                 self.extract_preferences(utterance)
 
