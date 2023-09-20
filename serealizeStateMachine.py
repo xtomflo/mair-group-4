@@ -99,6 +99,8 @@ class StateMachine:
                 print("src",srcName.name,"dest",destName.name,"transition",t[2])
         
 
+
+
 stateMachine=StateMachine()
 stateMachine.serealize()
 stateMachine.print()

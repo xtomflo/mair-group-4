@@ -147,20 +147,21 @@ def baseline_model_2(X_test):
     return y_predicted
     
 
-def assess_performance(y_test, y_predicted, model_name):
+def assess_performance(y_test, y_predicted, model_name, loud = False):
 # Calculate metrics for the given model predictions
 
-    print(f"Results for Model -> {model_name}")
+    if loud:
+        print(f"Results for Model -> {model_name}")
     
     # Print different scores up to 2 decimal points (.2f)
     precision = precision_score(y_test, y_predicted, average='macro', zero_division=1)
     recall = recall_score(y_test, y_predicted, average='macro')
     f1_score =  2 * precision * recall / (precision + recall)
-    
-    print(f" Accuracy Score: {accuracy_score(y_test, y_predicted):.2f}")
-    print(f" Precision Score: {precision:.2f}")
-    print(f" Recall Score: {recall:.2f}")
-    print(f" F1 Score: {f1_score:.2f}")
+    if loud:
+        print(f" Accuracy Score: {accuracy_score(y_test, y_predicted):.2f}")
+        print(f" Precision Score: {precision:.2f}")
+        print(f" Recall Score: {recall:.2f}")
+        print(f" F1 Score: {f1_score:.2f}")
 
 
 
@@ -195,6 +196,20 @@ def predictions_process(df:pd.DataFrame):
     assess_performance(y_test, y_knn, "K-Nearest Neighbors")
     
     return log_regression, decision_tree, knn
+
+
+def train_models():
+    # To be used ad-hoc, by the StateMachine
+    df = load_file()
+    df_deduplicated = df.drop_duplicates() # We want to use the model trained on deduplicated data, as we believe it to generalize better
+    X_train, X_test, y_train, y_test, X_train_vec, X_test_vec = preprocess(df_deduplicated)
+    
+    # Selected as the best model
+    log_regression = LogisticRegression(max_iter = 1000)
+    log_regression.fit(X_train_vec, y_train)
+    
+    return log_regression
+    
     
 def main():
     # Main function running the whole process and asking for user input
