@@ -24,6 +24,11 @@ states have a name and type. Type can be TALK or CHECK
 - What price range do you prefer? 
 - Do you prefer something in the cheap, moderate, or expensive price range?
 
+X. Loop
+- so any part in town?
+- so any type of food?
+- so any price range?
+  
 X. Inform user that there is no restaurant.
 - Unfortunately there is no restaurant matching your preferences. Do you have something else in mind?
   No match food type
