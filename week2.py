@@ -3,7 +3,7 @@ import numpy as np
 from main import train_models, vectorizer, le
 from Levenshtein import distance as levenshtein_distance
 from fuzzywuzzy import fuzz
-
+from serealizeStateMachine import StateMachine
 def fuzzy_keyword_match(keyword, text, threshold=80):
     
     words = text.lower().split()
@@ -15,15 +15,15 @@ def fuzzy_keyword_match(keyword, text, threshold=80):
     return False
 
 class RestaurantRecommender:
-    def __init__(self):
+    def __init__(self,state_machine):
         # Initial state
         self.state = 'Welcome'
-        
+        self.state_machine=state_machine
         # User preferences
         self.area = None
         self.food_type = None
         self.price_range = None
-        
+        self.matched_restaurant=None
         # Placeholder for restaurant data (You can replace this with real data later)
         self.restaurant_df = pd.read_csv('restaurant_info.csv')
         
@@ -206,7 +206,7 @@ class RestaurantRecommender:
                 if dialog_act == 'request':
                     self.state = 'Provide Info'
                     
-                elif dialog_act == ''
+              #  elif dialog_act == ''
                     
             elif self.state == 'Provide Info':
                 print(f"It's located on {matching_restaurants.addr}. \n You can reach them by calling {matching_restaurants.phone}")
@@ -214,14 +214,100 @@ class RestaurantRecommender:
             elif self.state == 'Exit':
                 print("Was great talking to you!")
                 break
-            
 
+
+    def giveInformation(self):
+        if self.area is not None and self.price_range is not None and self.food_type is not None:
+            print(f"Restaurant {self.matched_restaurant.restaurantname} serves {self.matched_restaurant.food} in the {self.matched_restaurant.area} part of town, in a {self.matched_restaurant.pricerange}")
+        elif self.area is None:
+            print(f"Restaurant {self.matched_restaurant.restaurantname} serves {self.matched_restaurant.food}  in a {self.matched_restaurant.pricerange}")
+        elif self.food_type is None:         
+            print(f"Restaurant {self.matched_restaurant.restaurantname} in the {self.matched_restaurant.area} part of town, in a {self.matched_restaurant.pricerange}")
+        elif self.price_range is None:
+            print(f"Restaurant {self.matched_restaurant.restaurantname} serves {self.matched_restaurant.food} in the {self.matched_restaurant.area} part of town")
+
+    def classifyRequest(self,utterance):
+        if "address"  in utterance:
+            return "address"
+        if "postcode"  in utterance:
+            return "postcode"
+        if "phone" in utterance: 
+            return "phone"
+
+    def make_transition(self):
+        transition=None
+        stateUpdated=False
+        currentState=self.state_machine.getState(self.state_machine.currentState)
+       # print(currentState.name)
+        utterance=None
+        if currentState.type=='Process': #these are the rectangular states, here the machine should say something
+            if currentState.id==14:
+                return False
+            elif currentState.id ==11:
+                self.giveInformation()
+            elif currentState.id ==16:
+                    print(f"The phone number of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.phone}")
+            elif currentState.id ==23:
+                    print(f"The address of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.addr}")
+            elif currentState.id ==24:
+                    print(f"The postcode of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.postcode}")
+            else:
+                utterance = input(currentState.utterances[0]).lower()
+                transition = self.predict_dialog_act(utterance)
+                if currentState.id==12 and transition=='request':
+                    requestType=self.classifyRequest(utterance)
+                    if requestType=='address':
+                        self.state_machine.currentState=13
+                    if requestType=='postcode':
+                        self.state_machine.currentState=21  
+                    if requestType=='phone':
+                        self.state_machine.currentState=22
+                    return True
+                self.extract_preferences(utterance)
+        elif currentState.type=='Decision': #these are the romboid states, here the machine should check something
+            if currentState.id==4:
+                transition='Yes' if self.area is not None  else 'No'
+            elif currentState.id==6:
+                transition='Yes' if self.food_type is not None  else 'No'
+            elif currentState.id==8:
+                transition='Yes' if self.price_range is not None  else 'No'
+            elif currentState.id==21:
+                transition='Yes' if self.matched_restaurant.postcode is not None  else 'No'
+            elif currentState.id==22:
+                transition='Yes' if self.matched_restaurant.phone is not None  else 'No'
+            elif currentState.id==13:
+                transition='Yes' if self.matched_restaurant.addr is not None  else 'No'
+            elif currentState.id==10:
+                matching_restaurants, reason = self.find_restaurant()
+                if not matching_restaurants.empty:
+                    transition='Yes' 
+                    self.matched_restaurant=matching_restaurants.head(1)
+                else:
+                    transition='No'
+            
+        for t in currentState.transitions:
+            if t[2]==transition:
+                    self.state_machine.currentState=t[1]                    
+                    stateUpdated=True
+                    break
+        if not stateUpdated:
+                for t in currentState.transitions:
+                    if t[2] =='' :
+                        self.state_machine.currentState=t[1]
+                        stateUpdated=True
+                        break
+        return True
 if __name__ == "__main__":
 
-    
+    s=StateMachine()
+    s.serealize()
     # Create an instance of the RestaurantRecommender class
-    recommender = RestaurantRecommender()
+    recommender = RestaurantRecommender(s)
    
-
+    #recommender.transition()
     # Start the state machine
-    recommender.transition()
+    
+    conversation_over=True
+    while conversation_over:
+        conversation_over=recommender.make_transition()
+        
