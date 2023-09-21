@@ -11,21 +11,67 @@ states have a name and type. Type can be TALK or CHECK
 9. Inform no matching restaurant available. Ask to state new preference, of type TALK, transition to 2.
 10. Give recommendation, of type TALK, display restaurant info from dataframe
 
-Welcome
+3. Welcome
 - Welcome to UU restaurant system. We can provide recommendations based on area, food type and price range. How may I help you?
 
-Area 
+4. Area known? 
 - What part of town do you prefer?
 
-Food
+6. Food type known?
 - What type of food do you prefer?
 
-Price 
+9. Price range known?
 - What price range do you prefer? 
 - Do you prefer something in the cheap, moderate, or expensive price range?
 
-If no restaurant exists based on user preference
-- Unfortunately there is no restaurant matching your preferences. Do you have something else in mind? 
+X. Inform user that there is no restaurant.
+- Unfortunately there is no restaurant matching your preferences. Do you have something else in mind?
+  No match food type
+- i am sorry, but there is no restaurant serving [food_type] food.
+  No match area
+- i am sorry, but there is no restaurant in [area] part of town.
+  No match price range
+- i am sorry, but there is no restaurant in the [price_range] price range.
+
+12. Give recommendation
+[price_range] = cheap, moderate, expensive
+[area] = north, south, east, west
+
+when food, price, area known:
+- [restaurant] serves [food_type] food in the in the [area] of town in a [price_range] price range.
+  
+when food and price is known:
+- [restaurant] serves [food_type] food in the [price_range] price range.
+  
+when food and area is known:
+- [restaurant] serves [food_type] food in the in the [area] of town
+
+when price and area is known:
+- [restaurant] is in the [area] of town and serves food in the [price_range] price range.
+
+19. Output information
+phone number:
+- the phone number of [restaurant] is [phone_number]
+- the address of [restaurant] is [address]
+- the postcode of [restaurant] is [postcode]
+
+phone number, address and postcode
+- the phone number of [restaurant] is [phone_number] and it is on [address], [postcode].
+
+phone number and address
+- the phone number of [restaurant] is [phone_number] and it is on [address].
+
+phone number and postcode
+- the phone number of [restaurant] is [phone_number] and the postcode is [postcode].
+
+post code and address
+- the address of [restaurant] is [address]and the postcode is [postcode].
+
+18. apologise for inconvenience 
+- Unfortunately this information is not available, I apologise for the inconvenience.
+
+
+
 
 
 # HowDoWeDoThis?
