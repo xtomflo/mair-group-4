@@ -33,6 +33,10 @@ A lookup function that retrieves suitable restaurant suggestions from the CSV da
 - [ ] Expanding the states to Wait, Request Info
 - [ ] Handle GOODBYE from everywhere.
 - [ ] Handling for Individial Info requests - Separate Address, PostCode, Phone. 
+- [ ] Handling for WORLD food (test cases) - should be international? 
+- [ ] Handling for DONT CARE type of preferences in each of the category. 
+
+
 
 Week 1 Deliverables
 
