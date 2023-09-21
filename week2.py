@@ -241,20 +241,20 @@ class RestaurantRecommender:
        # print(currentState.name)
         utterance=None
         if currentState.type=='Process': #these are the rectangular states, here the machine should say something
-            if currentState.id==14:
+            if currentState.id==14: # state 14 is the exit state so here we return false in order to get out of the loop 
                 return False
-            elif currentState.id ==11:
+            elif currentState.id ==11: # state 11 is the state that gives the recommendation based ot a picked restaurant 
                 self.giveInformation()
-            elif currentState.id ==16:
+            elif currentState.id ==16: # state 16 is the state where we are supposed to give information about the phone number of the recommended restaurant 
                     print(f"The phone number of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.phone}")
-            elif currentState.id ==23:
+            elif currentState.id ==23: # state 23 is the state where we are supposed to give information about the address of the recommended restaurant 
                     print(f"The address of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.addr}")
-            elif currentState.id ==24:
+            elif currentState.id ==24:# state 24 is the state where we are supposed to give information about the postcode of the recommended restaurant 
                     print(f"The postcode of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.postcode}")
             else:
                 utterance = input(currentState.utterances[0]).lower()
                 transition = self.predict_dialog_act(utterance)
-                if currentState.id==12 and transition=='request':
+                if currentState.id==12 and transition=='request': # state 12 is the state where we we wait for new request from the user after giving him a recommendation if his next uttterance is classify as a request we need to go to a new state according to how we classify this request 
                     requestType=self.classifyRequest(utterance)
                     if requestType=='address':
                         self.state_machine.currentState=13
@@ -265,19 +265,19 @@ class RestaurantRecommender:
                     return True
                 self.extract_preferences(utterance)
         elif currentState.type=='Decision': #these are the romboid states, here the machine should check something
-            if currentState.id==4:
+            if currentState.id==4: # decision 4 is where we see if we already have information about the area
                 transition='Yes' if self.area is not None  else 'No'
-            elif currentState.id==6:
+            elif currentState.id==6: # decision 4 is where we see if we already have information about the food type 
                 transition='Yes' if self.food_type is not None  else 'No'
-            elif currentState.id==8:
+            elif currentState.id==8: # decision 4 is where we see if we already have information about the price range 
                 transition='Yes' if self.price_range is not None  else 'No'
-            elif currentState.id==21:
+            elif currentState.id==21: # decision 21 is where we see if we  have information about the postocde of the recommended restaurant
                 transition='Yes' if self.matched_restaurant.postcode is not None  else 'No'
-            elif currentState.id==22:
+            elif currentState.id==22: # decision 22 is where we see if we  have information about the  phone number  the recommended restaurant
                 transition='Yes' if self.matched_restaurant.phone is not None  else 'No'
-            elif currentState.id==13:
+            elif currentState.id==13: # decision 13 is where we see if we  have information about the address of the recommended restaurant
                 transition='Yes' if self.matched_restaurant.addr is not None  else 'No'
-            elif currentState.id==10:
+            elif currentState.id==10: # state 10 assumes that we have all the needed information to give a recommendation and calls a function that selects an appropriate one 
                 matching_restaurants, reason = self.find_restaurant()
                 if not matching_restaurants.empty:
                     transition='Yes' 
@@ -285,13 +285,13 @@ class RestaurantRecommender:
                 else:
                     transition='No'
             
-        for t in currentState.transitions:
+        for t in currentState.transitions: # here we check for any conditional transitions and move on accordingly 
             if t[2]==transition:
                     self.state_machine.currentState=t[1]                    
                     stateUpdated=True
                     break
         if not stateUpdated:
-                for t in currentState.transitions:
+                for t in currentState.transitions: # if there are no conditional transitions or the conditions for these transitions have not been met we move towards an unconditional transition 
                     if t[2] =='' :
                         self.state_machine.currentState=t[1]
                         stateUpdated=True
