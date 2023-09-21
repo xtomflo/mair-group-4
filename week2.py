@@ -196,6 +196,23 @@ class RestaurantRecommender:
                 print(f"It's located on {matching_restaurants.addr}. \n You can reach them by calling {matching_restaurants.phone}")
                 # Placeholder for TALK logic (user interaction)
                 # Here, you would typically show the recommended restaurant from the dataframe
+
+                self.state == 'Wait'
+                
+            elif self.state == 'Wait':
+                utterance = input("Can I help with more information?")
+                dialog_act = self.predict_dialog_act(utterance)
+                
+                if dialog_act == 'request':
+                    self.state = 'Provide Info'
+                    
+                elif dialog_act == ''
+                    
+            elif self.state == 'Provide Info':
+                print(f"It's located on {matching_restaurants.addr}. \n You can reach them by calling {matching_restaurants.phone}")
+            
+            elif self.state == 'Exit':
+                print("Was great talking to you!")
                 break
             
 

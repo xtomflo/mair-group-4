@@ -25,6 +25,14 @@ A lookup function that retrieves suitable restaurant suggestions from the CSV da
     - [ ] Find a matching restaurant an retrieve it
     - [ ] State Transitions depending on the current state, dialog_act, what's found in the utterance
 
+# TODO: 
+- [ ] Showing alernatives - restaurants with 2 matching criteria
+- [ ] Showing alternatives - When keyword not found, show available ones (cheap, moderate, expensive | east, north, south etc.)
+    If we can't understand users preference. 
+- [ ] For food type - show nearest matching food type? 
+- [ ] Expanding the states to Wait, Request Info
+- [ ] Handle GOODBYE from everywhere.
+- [ ] Handling for Individial Info requests - Separate Address, PostCode, Phone. 
 
 Week 1 Deliverables
 
