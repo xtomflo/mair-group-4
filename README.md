@@ -9,6 +9,23 @@ Dean
 Tomek 
 
 
+Week 2 Deliverables
+The state transition diagram in graphical form with numbered states
+A working dialog system interface that prints system utterances to the screen and processes user input utterances entered with the keyboard, implementing a state transition function corresponding to the diagram, using predictions from the classifier built in Part 1a as part of the input for state transitions
+
+An algorithm identifying user preference statements in the sentences using pattern matching on variable keywords and value keywords on utterances classified as inform, using Levenshtein edit distance if necessary
+A lookup function that retrieves suitable restaurant suggestions from the CSV database matching the preferences as extracted in the implemented algorithm
+
+
+1. Design of the State Transitions with numbered states - Diagram 
+2. Dialog system interface:
+    - [ ] Pattern Matching Algorithm - 
+    - [ ] Keyword Matching 
+        Find the nearest matching keyword, from different categories
+    - [ ] Find a matching restaurant an retrieve it
+    - [ ] State Transitions depending on the current state, dialog_act, what's found in the utterance
+
+
 Week 1 Deliverables
 
 1. Preprocessing of data:
