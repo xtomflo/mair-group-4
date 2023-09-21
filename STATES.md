@@ -11,9 +11,21 @@ states have a name and type. Type can be TALK or CHECK
 9. Inform no matching restaurant available. Ask to state new preference, of type TALK, transition to 2.
 10. Give recommendation, of type TALK, display restaurant info from dataframe
 
+Welcome
+- Welcome to UU restaurant system. We can provide recommendations based on area, food type and price range. How may I help you?
 
+Area 
+- What part of town do you prefer?
 
+Food
+- What type of food do you prefer?
 
+Price 
+- What price range do you prefer? 
+- Do you prefer something in the cheap, moderate, or expensive price range?
+
+If no restaurant exists based on user preference
+- Unfortunately there is no restaurant matching your preferences. Do you have something else in mind? 
 
 
 # HowDoWeDoThis?
