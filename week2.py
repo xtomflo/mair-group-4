@@ -128,14 +128,17 @@ class RestaurantRecommender:
 
 
     def giveInformation(self):
-        if self.area is not None and self.price_range is not None and self.food_type is not None:
-            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0]} serves {self.matched_restaurant.food.values[0]} food in the {self.matched_restaurant.area.values[0]} part of town, in a {self.matched_restaurant.pricerange.values[0]}")
-        elif self.area is None:
-            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0]} serves {self.matched_restaurant.food.values[0]}  in a {self.matched_restaurant.pricerange.values[0]}")
-        elif self.food_type is None:         
-            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0]} in the {self.matched_restaurant.area.values[0]} part of town, in a {self.matched_restaurant.pricerange.values[0]}")
-        elif self.price_range is None:
-            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0]} serves {self.matched_restaurant.food.values[0]} in the {self.matched_restaurant.area.values[0]} part of town")
+        if self.mismatch_reason == 'exact_match':
+            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food in the {self.matched_restaurant.area.values[0].title()} of town, and has {self.matched_restaurant.pricerange.values[0].title()} prices")
+        elif self.mismatch_reason == 'area':
+            print(f"Sorry, we didn't find a matching restaurant in the {self.area} of town, but")
+            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food, in the {self.matched_restaurant.area.values[0].title()}  of town and has {self.matched_restaurant.pricerange.values[0].title()} prices")
+        elif self.mismatch_reason == 'food_type': 
+            print(f"Sorry, we didn't find a restaurant serving {self.food_type} type of food, but")
+            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food, in the {self.matched_restaurant.area.values[0].title()}  of town and has {self.matched_restaurant.pricerange.values[0].title()} prices")
+        elif self.mismatch_reason == 'price_range':
+            print(f"Sorry, we didn't find a matching restaurant in {self.price_range} price range, but")
+            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} in the {self.matched_restaurant.area.values[0].title()} part of town and prices are {self.matched_restaurant.pricerange.values[0].title()}")
 
     def classifyRequest(self,utterance):
         if "address"  in utterance:
@@ -157,11 +160,11 @@ class RestaurantRecommender:
             elif currentState.id ==11: # state 11 is the state that gives the recommendation based ot a picked restaurant 
                 self.giveInformation()
             elif currentState.id ==16: # state 16 is the state where we are supposed to give information about the phone number of the recommended restaurant 
-                    print(f"The phone number of restaurant {self.matched_restaurant.restaurantname.values[0]} is {self.matched_restaurant.phone.values[0]}")
+                    print(f"The phone number of restaurant {self.matched_restaurant.restaurantname.values[0].title()} is {self.matched_restaurant.phone.values[0].title()}")
             elif currentState.id ==23: # state 23 is the state where we are supposed to give information about the address of the recommended restaurant 
-                    print(f"The address of restaurant {self.matched_restaurant.restaurantname.values[0]} is {self.matched_restaurant.addr.values[0]}")
+                    print(f"The address of restaurant {self.matched_restaurant.restaurantname.values[0].title()} is {self.matched_restaurant.addr.values[0].title()}")
             elif currentState.id ==24:# state 24 is the state where we are supposed to give information about the postcode of the recommended restaurant 
-                    print(f"The postcode of restaurant {self.matched_restaurant.restaurantname.values[0]} is {self.matched_restaurant.postcode.values[0]}")
+                    print(f"The postcode of restaurant {self.matched_restaurant.restaurantname.values[0].title()} is {self.matched_restaurant.postcode.values[0].title()}")
             else:
                 utterance = input(currentState.utterances[0]).lower()
                 transition = self.predict_dialog_act(utterance)
@@ -193,6 +196,7 @@ class RestaurantRecommender:
                 if not matching_restaurants.empty:
                     transition='Yes' 
                     self.matched_restaurant=matching_restaurants.head(1)
+                    self.mismatch_reason = reason
                 else:
                     transition='No'
             
