@@ -4,6 +4,7 @@ from main import train_models, vectorizer, le
 from Levenshtein import distance as levenshtein_distance
 from fuzzywuzzy import fuzz
 from serealizeStateMachine import StateMachine
+
 def fuzzy_keyword_match(keyword, text, threshold=80):
     
     words = text.lower().split()
@@ -125,107 +126,20 @@ class RestaurantRecommender:
         
         return closest_match_df
     
-    def transition(self):
-        while True:
-            if self.state == 'Welcome':
-                utterance = input("Welcome! I can help you find a restaurant. Have you already decided on the area? \n >").lower()
-                print(utterance)
-                dialog_act = self.predict_dialog_act(utterance)
-                self.extract_preferences(utterance)
-                self.state = 'Area expressed?'
-
-            elif self.state == 'Area expressed?':
-                # Placeholder for CHECK logic
-                
-                if self.area is not None:
-                    self.state = 'Food type expressed?'
-                else:
-                    self.state = 'Ask for area'
-
-            elif self.state == 'Ask for area':
-                # Placeholder for TALK logic 
-                utterance = input("What is your preferred area? \n >").lower()
-                dialog_act = self.predict_dialog_act(utterance)
-                self.extract_preferences(utterance)
-                self.state = 'Area expressed?'
-
-            elif self.state == 'Food type expressed?':
-                # Placeholder for CHECK logic
-                if self.food_type is not None:
-                    self.state = 'Price range expressed?'
-                else:
-                    self.state = 'Ask for food type'
-
-            elif self.state == 'Ask for food type':
-                # Placeholder for TALK logic 
-                utterance = input("What type of cuisine would you like to eat? \n >").lower()
-                dialog_act = self.predict_dialog_act(utterance)
-                self.extract_preferences(utterance)
-
-                self.state = 'Food type expressed?'
-
-            elif self.state == 'Price range expressed?':
-                # Placeholder for CHECK logic
-                if self.price_range is not None:
-                    self.state = 'Check if restaurant exists'
-                else:
-                    self.state = 'Ask for price range'
-
-            elif self.state == 'Ask for price range':
-                # Placeholder for TALK logic 
-                utterance = input("What would be a fitting price range? \n >").lower()
-                self.extract_preferences(utterance)
-
-                self.state = 'Price range expressed?'
-
-            elif self.state == 'Check if restaurant exists':
-                # Placeholder for CHECK logic
-                # Here, you would typically check if a restaurant exists that fits the criteria
-                matching_restaurants, reason = self.find_restaurant()  # Placeholder, replace with actual filtering logic
-                if not matching_restaurants.empty:
-                    self.state = 'Give recommendation'
-                else:
-                    self.state = 'Inform no matching restaurant available. Ask to state new preference'
-
-            elif self.state == 'Inform no matching restaurant available. Ask to state new preference':
-                print("Sorry, no matching restaurant is available. Please state new preferences.")
-                self.clear_state()
-                self.state = 'Area expressed?'
-
-            elif self.state == 'Give recommendation':
-                print(f"We've found a matching restaurant. It's name is {matching_restaurants.restaurantname}")
-                print(f"It's located on {matching_restaurants.addr}. \n You can reach them by calling {matching_restaurants.phone}")
-                # Placeholder for TALK logic (user interaction)
-                # Here, you would typically show the recommended restaurant from the dataframe
-
-                self.state == 'Wait'
-                
-            elif self.state == 'Wait':
-                utterance = input("Can I help with more information?")
-                dialog_act = self.predict_dialog_act(utterance)
-                
-                if dialog_act == 'request':
-                    self.state = 'Provide Info'
-                    
-              #  elif dialog_act == ''
-                    
-            elif self.state == 'Provide Info':
-                print(f"It's located on {matching_restaurants.addr}. \n You can reach them by calling {matching_restaurants.phone}")
-            
-            elif self.state == 'Exit':
-                print("Was great talking to you!")
-                break
 
 
     def giveInformation(self):
-        if self.area is not None and self.price_range is not None and self.food_type is not None:
-            print(f"Restaurant {self.matched_restaurant.restaurantname} serves {self.matched_restaurant.food} in the {self.matched_restaurant.area} part of town, in a {self.matched_restaurant.pricerange}")
-        elif self.area is None:
-            print(f"Restaurant {self.matched_restaurant.restaurantname} serves {self.matched_restaurant.food}  in a {self.matched_restaurant.pricerange}")
-        elif self.food_type is None:         
-            print(f"Restaurant {self.matched_restaurant.restaurantname} in the {self.matched_restaurant.area} part of town, in a {self.matched_restaurant.pricerange}")
-        elif self.price_range is None:
-            print(f"Restaurant {self.matched_restaurant.restaurantname} serves {self.matched_restaurant.food} in the {self.matched_restaurant.area} part of town")
+        if self.mismatch_reason == 'exact_match':
+            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food in the {self.matched_restaurant.area.values[0].title()} of town, and has {self.matched_restaurant.pricerange.values[0].title()} prices")
+        elif self.mismatch_reason == 'area':
+            print(f"Sorry, we didn't find a matching restaurant in the {self.area} of town, but")
+            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food, in the {self.matched_restaurant.area.values[0].title()}  of town and has {self.matched_restaurant.pricerange.values[0].title()} prices")
+        elif self.mismatch_reason == 'food_type': 
+            print(f"Sorry, we didn't find a restaurant serving {self.food_type} type of food, but")
+            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food, in the {self.matched_restaurant.area.values[0].title()}  of town and has {self.matched_restaurant.pricerange.values[0].title()} prices")
+        elif self.mismatch_reason == 'price_range':
+            print(f"Sorry, we didn't find a matching restaurant in {self.price_range} price range, but")
+            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} in the {self.matched_restaurant.area.values[0].title()} part of town and prices are {self.matched_restaurant.pricerange.values[0].title()}")
 
     def classifyRequest(self,utterance):
         if "address"  in utterance:
@@ -291,16 +205,17 @@ class RestaurantRecommender:
                 if not matching_restaurants.empty:
                     transition='Yes' 
                     self.matched_restaurant=matching_restaurants.head(1)
+                    self.mismatch_reason = reason
                 else:
                     transition='No'
             
-        for t in currentState.transitions:
+        for t in currentState.transitions: # here we check for any conditional transitions and move on accordingly 
             if t[2]==transition:
                     self.state_machine.currentState=t[1]                    
                     stateUpdated=True
                     break
         if not stateUpdated:
-                for t in currentState.transitions:
+                for t in currentState.transitions: # if there are no conditional transitions or the conditions for these transitions have not been met we move towards an unconditional transition 
                     if t[2] =='' :
                         self.state_machine.currentState=t[1]
                         stateUpdated=True
@@ -313,7 +228,6 @@ if __name__ == "__main__":
     # Create an instance of the RestaurantRecommender class
     recommender = RestaurantRecommender(s)
    
-    #recommender.transition()
     # Start the state machine
     
     conversation_over=False

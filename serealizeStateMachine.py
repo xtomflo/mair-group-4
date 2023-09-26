@@ -49,11 +49,11 @@ class StateMachine:
   
     def print(self):
         for s in self.states:
-            print("id",s.id,"name",s.name,"type",s.type)
+            #print("id",s.id,"name",s.name,"type",s.type)
             for t in s.transitions:
                 srcName=self.getState(t[0])
                 destName=self.getState(t[1])
-                print("src",srcName.name,"dest",destName.name,"transition",t[2])
+                #print("src",srcName.name,"dest",destName.name,"transition",t[2])
 
     def serealizeMachineQuestions(self):
         file = open('machine_utterances.txt')
