@@ -20,8 +20,7 @@ class State:
 class StateMachine:
     def __init__(self):
         self.states=[]
-        #self.collectedInformation={}
-        self.currentState=3 # 3 is always the initial state, since it is the welcome state
+        self.currentState=1 # 1 is always the initial state, since it is the welcome state
     def serealize(self): 
         #
         file = open('diagram.csv')  

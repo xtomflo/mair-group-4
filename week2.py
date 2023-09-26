@@ -24,6 +24,7 @@ class RestaurantRecommender:
         self.food_type = None
         self.price_range = None
         self.matched_restaurant=None
+        self.isInformationGiven=False
         # Placeholder for restaurant data (You can replace this with real data later)
         self.restaurant_df = pd.read_csv('restaurant_info.csv')
         
@@ -234,50 +235,58 @@ class RestaurantRecommender:
         if "phone" in utterance: 
             return "phone"
 
-    def make_transition(self):
+    def make_transition(self):  
         transition=None
         stateUpdated=False
         currentState=self.state_machine.getState(self.state_machine.currentState)
-       # print(currentState.name)
+        print(currentState.name)
         utterance=None
         if currentState.type=='Process': #these are the rectangular states, here the machine should say something
-            if currentState.id==14:
-                return False
-            elif currentState.id ==11:
-                self.giveInformation()
-            elif currentState.id ==16:
+            if currentState.id==23:
+                utterance = input(currentState.utterances[0]).lower()
+                return True
+            elif currentState.id ==14:
+                if (not self.isInformationGiven):
+                    self.giveInformation()
+                    self.isInformationGiven=True
+                utterance = input(currentState.utterances[0]).lower()
+                transition = self.predict_dialog_act(utterance)
+                if transition=='request':
+                    requestType=self.classifyRequest(utterance)
+                    if requestType=='address':
+                        self.state_machine.currentState=17
+                    elif requestType=='postcode':
+                        self.state_machine.currentState=18  
+                    elif requestType=='phone':
+                        self.state_machine.currentState=16
+                    return False
+            elif currentState.id ==19:
                     print(f"The phone number of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.phone}")
-            elif currentState.id ==23:
+            elif currentState.id ==20:
                     print(f"The address of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.addr}")
-            elif currentState.id ==24:
+            elif currentState.id ==21:
                     print(f"The postcode of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.postcode}")
+            elif currentState.id ==10:
+                    self.state_machine.currentState=14
+                    return False
             else:
                 utterance = input(currentState.utterances[0]).lower()
                 transition = self.predict_dialog_act(utterance)
-                if currentState.id==12 and transition=='request':
-                    requestType=self.classifyRequest(utterance)
-                    if requestType=='address':
-                        self.state_machine.currentState=13
-                    if requestType=='postcode':
-                        self.state_machine.currentState=21  
-                    if requestType=='phone':
-                        self.state_machine.currentState=22
-                    return True
                 self.extract_preferences(utterance)
         elif currentState.type=='Decision': #these are the romboid states, here the machine should check something
-            if currentState.id==4:
+            if currentState.id==2:
                 transition='Yes' if self.area is not None  else 'No'
-            elif currentState.id==6:
+            elif currentState.id==4:
                 transition='Yes' if self.food_type is not None  else 'No'
-            elif currentState.id==8:
+            elif currentState.id==6:
                 transition='Yes' if self.price_range is not None  else 'No'
-            elif currentState.id==21:
+            elif currentState.id==18:
                 transition='Yes' if self.matched_restaurant.postcode is not None  else 'No'
-            elif currentState.id==22:
+            elif currentState.id==16:
                 transition='Yes' if self.matched_restaurant.phone is not None  else 'No'
-            elif currentState.id==13:
+            elif currentState.id==17:
                 transition='Yes' if self.matched_restaurant.addr is not None  else 'No'
-            elif currentState.id==10:
+            elif currentState.id==8:
                 matching_restaurants, reason = self.find_restaurant()
                 if not matching_restaurants.empty:
                     transition='Yes' 
@@ -296,7 +305,7 @@ class RestaurantRecommender:
                         self.state_machine.currentState=t[1]
                         stateUpdated=True
                         break
-        return True
+        return False
 if __name__ == "__main__":
 
     s=StateMachine()
@@ -307,7 +316,7 @@ if __name__ == "__main__":
     #recommender.transition()
     # Start the state machine
     
-    conversation_over=True
-    while conversation_over:
+    conversation_over=False
+    while not conversation_over:
         conversation_over=recommender.make_transition()
         
