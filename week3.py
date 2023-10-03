@@ -22,7 +22,7 @@ def infer_properties(restaurant_properties):
     return inferred_properties
 
 
-restaurant_1 = {"cheap", "good food", "long stay", "romanian"}
+restaurant_1 = ["cheap", "good food", "long stay", "romanian"]
 inferred = infer_properties(restaurant_1)
 print(inferred)  # {'touristic': True, 'assigned seats': True, 'romantic': False}
 

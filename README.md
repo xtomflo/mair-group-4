@@ -3,7 +3,7 @@ Group Project repository for Methods in AI Research course
 
 Team:
 Alex
-Lilya
+Liliya
 Isabelle
 Dean
 Tomek 

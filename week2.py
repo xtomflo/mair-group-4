@@ -1,19 +1,41 @@
+import subprocess
 import pandas as pd
 import numpy as np
-from main import train_models, vectorizer, le
+from models import train_models, vectorizer, le
 from Levenshtein import distance as levenshtein_distance
 from fuzzywuzzy import fuzz
 from serealizeStateMachine import StateMachine
+
+CONFIG_TTS = False
+
+
+
+def infer_properties(restaurant_properties):
+    # Check if properties meet the rules, return the consequences
+    inferred_properties = {}
+    
+    # We apply rules in order
+    # For ex. if restaurant is cheap, good and romanian, it being romanian will overwrite touristic status to False
+    for antedecent, consequent, value in rules:
+        if all(prop in restaurant_properties for prop in antedecent):
+            inferred_properties[consequent] = value
+
+    return inferred_properties
 
 def fuzzy_keyword_match(keyword, text, threshold=80):
     
     words = text.lower().split()
     
+    # Look for exact match first
+    if keyword in words:
+        return True
+
     for word in words:
         similarity = fuzz.ratio(keyword, word)
         if similarity > threshold:
             return True
     return False
+
 
 class RestaurantRecommender:
     def __init__(self,state_machine):
@@ -24,6 +46,7 @@ class RestaurantRecommender:
         self.area = None
         self.food_type = None
         self.price_range = None
+        self.special_features = None
         self.matched_restaurant=None
         self.isInformationGiven=False
         # Placeholder for restaurant data (You can replace this with real data later)
@@ -40,38 +63,39 @@ class RestaurantRecommender:
     def extract_preferences(self, utterance):
                 
         # Define list of keywords that we're looking to match
-        food_types = ['british', 'modern european', 'italian', 'romanian', 'seafood',
-        'chinese', 'steakhouse', 'asian oriental', 'french', 'portuguese',
-        'indian', 'spanish', 'european', 'vietnamese', 'korean', 'thai',
-        'moroccan', 'swiss', 'fusion', 'gastropub', 'tuscan',
-        'international', 'traditional', 'mediterranean', 'polynesian',
-        'african', 'turkish', 'bistro', 'north american', 'australasian',
-        'persian', 'jamaican', 'lebanese', 'cuban', 'japanese', 'catalan']
-        areas = ['west', 'north', 'south', 'centre', 'east']
-        price_range = ['moderate', 'expensive', 'cheap']
-        
-        
-        # Check for food types
-        for food in food_types:
-            if fuzzy_keyword_match(food, utterance):
-                self.food_type = food
-                print(f"Food updated {food}!")
-                break
+        keywords = {
+            'food_type': ['british', 'modern european', 'italian', 'romanian', 'seafood',
+                'chinese', 'steakhouse', 'asian oriental', 'french', 'portuguese',
+                'indian', 'spanish', 'european', 'vietnamese', 'korean', 'thai',
+                'moroccan', 'swiss', 'fusion', 'gastropub', 'tuscan',
+                'international', 'traditional', 'mediterranean', 'polynesian',
+                'african', 'turkish', 'bistro', 'north american', 'australasian',
+                'persian', 'jamaican', 'lebanese', 'cuban', 'japanese', 'catalan'], 
+            'area': ['west', 'north', 'south', 'centre', 'east'],
+            'price_range': ['moderate', 'expensive', 'cheap'],
+            'special_feature': ['touristic', 'assigned seats', 'children', 'romantic', 'no']
+        }
 
-        # Check for area
-        for area in areas:
-            if fuzzy_keyword_match(area, utterance):
-                self.area = area
-                print(f"Area updated {area}!")
-                break
+        for key, options in keywords.items():
 
-        # Check for price range
-        for price in price_range:
-            if fuzzy_keyword_match(price, utterance):
-                self.price_range = price
-                print(f"Price_Range updated {price}!")
-                break
+            # Check for exact match
+            for option in options:
+                if option in utterance:
+                    setattr(self, key, option) 
+                    print(f"{key} updated to {option}")
+                    print(f" Area {self.area} Food {self.food_type} Price {self.price_range}")
+                    break
 
+            # If no exact match, check fuzzy match  
+            if not hasattr(self, key):
+                for option in options:
+                    if fuzzy_keyword_match(option, utterance):
+                        setattr(self, key, option)
+                        print(f"{key} fuzzily updated to {option}")
+                        break
+
+       
+            
     def predict_dialog_act(self, utterance):
         custom_message_vec = vectorizer.transform([utterance])
 
@@ -128,19 +152,20 @@ class RestaurantRecommender:
     
 
 
+
     def giveInformation(self):
         if self.mismatch_reason == 'exact_match':
-            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food in the {self.matched_restaurant.area.values[0].title()} of town, and has {self.matched_restaurant.pricerange.values[0].title()} prices")
+            output_utterance(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food in the {self.matched_restaurant.area.values[0].title()} of town, and has {self.matched_restaurant.pricerange.values[0].title()} prices")
         elif self.mismatch_reason == 'area':
-            print(f"Sorry, we didn't find a matching restaurant in the {self.area} of town, but")
-            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food, in the {self.matched_restaurant.area.values[0].title()}  of town and has {self.matched_restaurant.pricerange.values[0].title()} prices")
+            output_utterance(f"Sorry, we didn't find a matching restaurant in the {self.area} of town, but")
+            output_utterance(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food, in the {self.matched_restaurant.area.values[0].title()}  of town and has {self.matched_restaurant.pricerange.values[0].title()} prices")
         elif self.mismatch_reason == 'food_type': 
-            print(f"Sorry, we didn't find a restaurant serving {self.food_type} type of food, but")
-            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food, in the {self.matched_restaurant.area.values[0].title()}  of town and has {self.matched_restaurant.pricerange.values[0].title()} prices")
+            output_utterance(f"Sorry, we didn't find a restaurant serving {self.food_type} type of food, but")
+            output_utterance(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food, in the {self.matched_restaurant.area.values[0].title()}  of town and has {self.matched_restaurant.pricerange.values[0].title()} prices")
         elif self.mismatch_reason == 'price_range':
-            print(f"Sorry, we didn't find a matching restaurant in {self.price_range} price range, but")
-            print(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} in the {self.matched_restaurant.area.values[0].title()} part of town and prices are {self.matched_restaurant.pricerange.values[0].title()}")
-
+            output_utterance(f"Sorry, we didn't find a matching restaurant in {self.price_range} price range, but")
+            output_utterance(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} in the {self.matched_restaurant.area.values[0].title()} part of town and prices are {self.matched_restaurant.pricerange.values[0].title()}")
+        
     def classifyRequest(self,utterance):
         if "address"  in utterance:
             return "address"
@@ -157,12 +182,14 @@ class RestaurantRecommender:
         utterance=None
         if currentState.type=='Process': #these are the rectangular states, here the machine should say something
             if currentState.id==23:
+                output_utterance(currentState.utterances[0])
                 utterance = input(currentState.utterances[0]).lower()
                 return True
             elif currentState.id ==14:
                 if (not self.isInformationGiven):
                     self.giveInformation()
                     self.isInformationGiven=True
+                output_utterance(currentState.utterances[0])
                 utterance = input(currentState.utterances[0]).lower()
                 transition = self.predict_dialog_act(utterance)
                 if transition=='request':
@@ -175,51 +202,63 @@ class RestaurantRecommender:
                         self.state_machine.currentState=16
                     return False
             elif currentState.id ==19:
-                    print(f"The phone number of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.phone}")
+                output_utterance(f"The phone number of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.phone}")
             elif currentState.id ==20:
-                    print(f"The address of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.addr}")
+                output_utterance(f"The address of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.addr}")
             elif currentState.id ==21:
-                    print(f"The postcode of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.postcode}")
-            elif currentState.id ==10:
-                    self.state_machine.currentState=14
-                    return False
+                output_utterance(f"The postcode of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.postcode}")
+            elif currentState.id == 10:
+                utterance = input(currentState.utterances[0])
+                self.extract_preferences(utterance)
+                print(self.special_features)
             else:
                 utterance = input(currentState.utterances[0]).lower()
-                transition = self.predict_dialog_act(utterance)
+                output_utterance(currentState.utterances[0])
+                dialog_act = self.predict_dialog_act(utterance)
                 self.extract_preferences(utterance)
         elif currentState.type=='Decision': #these are the romboid states, here the machine should check something
-            if currentState.id==2:
+            if currentState.id == 2:
                 transition='Yes' if self.area is not None  else 'No'
-            elif currentState.id==4:
+            elif currentState.id == 4:
                 transition='Yes' if self.food_type is not None  else 'No'
-            elif currentState.id==6:
+            elif currentState.id == 6:
                 transition='Yes' if self.price_range is not None  else 'No'
-            elif currentState.id==18:
+            elif currentState.id == 11:
+                transition='Yes' if self.special_features is not None else 'Yes'
+            elif currentState.id == 18:
                 transition='Yes' if self.matched_restaurant.postcode is not None  else 'No'
-            elif currentState.id==16:
+            elif currentState.id == 16:
                 transition='Yes' if self.matched_restaurant.phone is not None  else 'No'
-            elif currentState.id==17:
+            elif currentState.id == 17:
                 transition='Yes' if self.matched_restaurant.addr is not None  else 'No'
-            elif currentState.id==8:
-                matching_restaurants, reason = self.find_restaurant()
-                if not matching_restaurants.empty:
+            elif currentState.id == 8:
+                self.matching_restaurants, reason = self.find_restaurant()
+                if not self.matching_restaurants.empty:
                     transition='Yes' 
-                    self.matched_restaurant=matching_restaurants.head(1)
+                    self.matched_restaurant=self.matching_restaurants.head(1)
                     self.mismatch_reason = reason
                 else:
                     transition='No'
+            elif currentState.id == 12:
+                if not self.matching_restaurants.empty:
+                    for restaurant in self.matching_restaurants.iterrows():
+                        inferred_properties = infer_properties({restaurant})
+                        print(inferred_properties)
+                
             
-        for t in currentState.transitions: # here we check for any conditional transitions and move on accordingly 
+        for t in currentState.transitions: 
+        # here we check for any conditional transitions and move on accordingly 
             if t[2]==transition:
                     self.state_machine.currentState=t[1]                    
                     stateUpdated=True
                     break
         if not stateUpdated:
-                for t in currentState.transitions: # if there are no conditional transitions or the conditions for these transitions have not been met we move towards an unconditional transition 
-                    if t[2] =='' :
-                        self.state_machine.currentState=t[1]
-                        stateUpdated=True
-                        break
+            for t in currentState.transitions: 
+            # if there are no conditional transitions or the conditions for these transitions have not been met we move towards an unconditional transition 
+                if t[2] =='' :
+                    self.state_machine.currentState=t[1]
+                    stateUpdated=True
+                    break
         return False
 if __name__ == "__main__":
 
