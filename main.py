@@ -214,12 +214,7 @@ def train_models():
 def main():
     # Main function running the whole process and asking for user input
 
-    # If file_path different than dialog_acts.dat specify when calling running the file
-    if len(sys.argv) > 1:
-        file_path = sys.argv[1]
-
-
-    df = load_file(file_path)
+    df = load_file()
     
     print("Loaded DataFrame:")
     print(df.head())
