@@ -154,8 +154,8 @@ def assess_performance(y_test, y_predicted, model_name, loud = False):
         print(f"Results for Model -> {model_name}")
     
     # Print different scores up to 2 decimal points (.2f)
-    precision = precision_score(y_test, y_predicted, average='macro', zero_division=1)
-    recall = recall_score(y_test, y_predicted, average='macro')
+    precision = precision_score(y_test, y_predicted, average='micro', zero_division=1)
+    recall = recall_score(y_test, y_predicted, average='micro')
     f1_score =  2 * precision * recall / (precision + recall)
     if loud:
         print(f" Accuracy Score: {accuracy_score(y_test, y_predicted):.2f}")
@@ -213,11 +213,12 @@ def train_models():
     
 def main():
     # Main function running the whole process and asking for user input
-    if len(sys.argv) < 2:
-        print("To specify a different input file use: python main.py <path_to_dialog-act.dat>")
-        
 
-    file_path = sys.argv[1]
+    # If file_path different than dialog_acts.dat specify when calling running the file
+    if len(sys.argv) > 1:
+        file_path = sys.argv[1]
+
+
     df = load_file(file_path)
     
     print("Loaded DataFrame:")
