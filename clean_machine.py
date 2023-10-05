@@ -89,7 +89,6 @@ class RestaurantRecommender():
         self.area = None
         self.food_type = None
         self.price_range = None
-        self.dont_care = None
         self.special_feature = None
         self.matched_restaurant=None
         self.info_provided = False
@@ -185,54 +184,8 @@ class RestaurantRecommender():
         if not closest_match_df.empty:
             return closest_match_df, "area"
 
-        return closest_match_df
+        return closest_match_df, "empty"
 
-
-    def find_restaurant(self):
-    ### Find a restaurant that will match stated preference criteria.
-    
-        restaurant_match_df = self.restaurant_df.copy()
-        
-        # Filter the Restaurants for an exact match to preferences
-        restaurant_match_df = restaurant_match_df[restaurant_match_df['area'].str.lower() == self.area.lower()]
-        restaurant_match_df = restaurant_match_df[restaurant_match_df['food'].str.lower() == self.food_type.lower()]
-        restaurant_match_df = restaurant_match_df[restaurant_match_df['pricerange'].str.lower() == self.price_range.lower()]
-
-        # Return the restaurant(s) with a note 
-        if not restaurant_match_df.empty:
-            return restaurant_match_df, "exact_match"
-
-        # Check if closest match finding is enabled
-        if SETTINGS.get('closest_match') is False:
-            return restaurant_match_df
-        
-        # Find closest matches with info on what criteria is not met.
-        closest_match_df = self.restaurant_df.copy()
-        
-        closest_match_df = closest_match_df[closest_match_df['area'].str.lower() == self.area.lower()]
-        closest_match_df = closest_match_df[closest_match_df['food'].str.lower() == self.food_type.lower()]
-        
-        if not closest_match_df.empty:
-            return closest_match_df, "price_range"
-        
-        closest_match_df = self.restaurant_df.copy()
-        
-        closest_match_df = closest_match_df[closest_match_df['area'].str.lower() == self.area.lower()]
-        closest_match_df = closest_match_df[closest_match_df['pricerange'].str.lower() == self.price_range.lower()]
-        
-        if not closest_match_df.empty:
-            return closest_match_df, "food_type"
-
-        closest_match_df = self.restaurant_df.copy()
-        if self.food_type:
-            closest_match_df = closest_match_df[closest_match_df['food'].str.lower() == self.food_type.lower()]
-        if self.price_range:
-            closest_match_df = closest_match_df[closest_match_df['pricerange'].str.lower() == self.price_range.lower()]
-        
-        if not closest_match_df.empty:
-            return closest_match_df, "area"
-        
-        return closest_match_df
     
     def classify_request(self,utterance):
             if "address"  in utterance:
@@ -274,9 +227,9 @@ class RestaurantRecommender():
         
         for word in dont_care_words:
             if utils.fuzzy_keyword_match(word, utterance):
-                return False
+                return True
             
-        return True
+        return False
         
         
     def extract_preferences(self, utterance):
@@ -296,21 +249,23 @@ class RestaurantRecommender():
             'price_range': ['moderate', 'expensive', 'cheap'],
             'special_feature': ['touristic', 'assigned seats', 'children', 'romantic'],
         }
-
+        
+        # Workaround for handling test-cases with 'world' cuisine
+        if 'world' in utterance:
+            utterance = utterance.replace("world", "international")
+        if 'asian' in utterance:
+            utterance = utterance.replace("asian", "asian oriental")
+                        
         for key, options in keywords.items():
             # Check for exact match
             for option in options:
-                print("exact check")
+                print(f"exact check, {option}, {utterance}")
+                
                 if option in utterance:
-                    # Workaround for handling test-cases with 'world' cuisine
-                    if 'world' in utterance:
-                        utterance.replace("world", "international")
-                    if 'asian' in utterance:
-                        utterance.replace("asian", "asian oriental")
                     setattr(self, key, option)
                     print(f"{key} updated to {option}")
                     print(f" Area {self.area} Food {self.food_type} Price {self.price_range}")
-                    
+                    break
 
             # If no exact match, check fuzzy match  
             print("fuzzy check")
@@ -322,7 +277,7 @@ class RestaurantRecommender():
                     
 
     def get_next_state(self, current_state, dialog_act:str = "none", user_utterance:str = ""):
-
+        
         print(f"Current State: {current_state}, Dialog Act: {dialog_act}")
         if dialog_act == 'bye':
             return State.EXIT
@@ -381,10 +336,10 @@ class RestaurantRecommender():
         elif current_state == State.CHECK_RESTAURANT:
             self.matched_restaurants, self.mismatch_reason = self.find_restaurant()
             
-            if self.matched_restaurants.empty is False:
-                return State.ASK_REQUIREMENTS
-            else:
+            if self.matched_restaurants.empty is True:
                 return State.NO_RESTAURANT
+            else:
+                return State.ASK_REQUIREMENTS
             
         elif current_state == State.NO_RESTAURANT:
             #utils.output_utterance("Unfortunately we do dont have a restaurant in our database that matches your criteria.")
@@ -477,7 +432,7 @@ class RestaurantRecommender():
             
             #user_utterance = get_user_input()         
             next_state = self.get_next_state(current_state, dialog_act, user_utterance)
-
+            
             if next_state == State.WELCOME:
                 if last_state is State.WELCOME:
                     dialog_act, user_utterance = self.collect_input("Great to have you here! How can I help?")
@@ -523,7 +478,8 @@ class RestaurantRecommender():
             elif next_state == State.NO_RESTAURANT:
                 # Inform there's no matches
                 print("Unfortunately we do dont have a restaurant in our database that matches your criteria.")
-            
+                print("Please try searching with differrent criteria")
+                
             elif next_state == State.PROVIDE_PHONE:
                 # Provide restaurant phone number
                 utils.output_utterance(f"The phone number of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.phone}")
