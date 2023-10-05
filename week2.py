@@ -73,7 +73,7 @@ class RestaurantRecommender:
                 'persian', 'jamaican', 'lebanese', 'cuban', 'japanese', 'catalan'], 
             'area': ['west', 'north', 'south', 'centre', 'east'],
             'price_range': ['moderate', 'expensive', 'cheap'],
-            'special_feature': ['touristic', 'assigned seats', 'children', 'romantic', 'no']
+            'special_feature': ['touristic', 'assigned seats', 'children', 'romantic']
         }
 
         for key, options in keywords.items():
