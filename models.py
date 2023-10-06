@@ -161,7 +161,7 @@ def assess_performance(y_test, y_predicted, model_name, loud=True):
 def predictions_process(df: pd.DataFrame):
     # Go through the prediction process for a given DataFrame
 
-    X_train, X_test, y_train, y_test, X_train_vec, X_test_vec = preprocess(df)
+    X_train, X_test, y_train, y_test, X_train_vec, X_test_vec, _ = preprocess(df)
 
     y_baseline_1 = baseline_model_1(X_test)
     assess_performance(y_test, y_baseline_1, "Baseline 1")
