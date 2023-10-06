@@ -1,7 +1,6 @@
 import sys
 import pandas as pd
 import numpy as np
-import config
 
 from collections import defaultdict
 from sklearn.preprocessing import LabelEncoder
@@ -68,7 +67,7 @@ def preprocess(df: pd.DataFrame):
     X_test_vec = vectorizer.transform(X_test)
 
     # Baseline models need non-vectorized utterences, ML models need vectors so returning both types
-    return X_train, X_test, y_train, y_test, X_train_vec, X_test_vec
+    return X_train, X_test, y_train, y_test, X_train_vec, X_test_vec, le
 
 
 def baseline_model_1(X_test):
@@ -83,59 +82,39 @@ def baseline_model_1(X_test):
 
 
 def baseline_model_2(X_test):
-    # TODO
-    # Baseline model 2
-    # ack	- "okay" "aha"
-    # affirm	- "yes"
-    # bye	- "bye", "goodbye"
-    # confirm	 - "is it" "was it"
-    # deny	- "no" "dont" "don't" "won't"
-    # hello	 - "hello" "hi"
-    # inform	- "price" "north" "east" "south" "west" "chinese" "type" "mexican" "thai" "cheap" "expensive"
-    # negate - "no"
-    # null	- "cough"
-    # repeat	- "repeat"
-    # reqalts	- "how"
-    # reqmore	request more suggestions	more
-    # request	ask for information	what is the post code
-    # restart	attempt to restart the dialog	okay start over
-    # thankyou	express thanks	thank you good bye
-
-    # Let's not overthink it, it's just the baseline - dummy is fine.
-    # DEF List of ACK keywords
-    # DEF List of Affirm keywords
-    # .....
-    #
+    # Baseline model No. 2
     # Go through the X_test row by row.
     # IF keyword for ack exists in the sentence, apply the ack label.
     # ELSE IF keyword for affirm exists in the sentence, apply affirm label
     keyWords = defaultdict(set)
     dict = defaultdict(set)
-    keyWords["ack"] = ["okay", "um", "kay"]
-    keyWords["affirm"] = ["yes", "right"]
-    keyWords["bye"] = ["bye", "goodbye", "you", "good"]
-    keyWords["confirm"] = ["it", "is"]
-    keyWords["deny"] = ["wrong", "no", "dont", "don't", "won't"]
+    keyWords["ack"] = ["okay", "aha"]
+    keyWords["affirm"] = ["yes"]
+    keyWords["bye"] = ["bye", "goodbye"]
+    keyWords["confirm"] = ["is it", "was it"]
+    keyWords["deny"] = ["no", "dont", "don't", "won't"]
     keyWords["hello"] = ["hello", "hi"]
     keyWords["inform"] = [
-        "food",
-        "restaurant",
-        "town",
-        "of",
         "price",
         "north",
         "east",
         "south",
         "west",
+        "chinese",
+        "type",
+        "mexican",
+        "thai",
+        "cheap",
+        "expensive",
     ]
     keyWords["negate"] = ["no"]
-    keyWords["null"] = ["cough"]
-    keyWords["repeat"] = ["repeat", "again"]
-    keyWords["reqalts"] = ["how"]
+    keyWords["null"] = ["noise", "sil", "unintelligible", "cough"]
+    keyWords["repeat"] = ["repeat", "that", "back", "again"]
+    keyWords["reqalts"] = ["about", "how", "else"]
     keyWords["reqmore"] = ["more"]
-    keyWords["request"] = ["postcode", "address"]
-    keyWords["restart"] = ["restart"]
-    keyWords["thankyou"] = ["thanks"]
+    keyWords["request"] = ["the", "number", "phone", "postcode", "address"]
+    keyWords["restart"] = ["start", "over", "restart"]
+    keyWords["thankyou"] = ["thank"]
 
     for k in keyWords.keys():
         for v in keyWords[k]:
@@ -160,7 +139,6 @@ def baseline_model_2(X_test):
         cnt += 1
 
     return y_predicted
-
 
 def assess_performance(y_test, y_predicted, model_name, loud=True):
     # Calculate metrics for the given model predictions
