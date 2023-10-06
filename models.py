@@ -140,9 +140,9 @@ def baseline_model_2(X_test):
 
     return y_predicted
 
+
 def assess_performance(y_test, y_predicted, model_name, loud=True):
     # Calculate metrics for the given model predictions
-
     if loud:
         print(f"Results for Model -> {model_name}")
 
@@ -198,7 +198,7 @@ def train_log_reg():
     df_deduplicated = (
         df.drop_duplicates()
     )  # We want to use the model trained on deduplicated data, as we believe it to generalize better
-    X_train, X_test, y_train, y_test, X_train_vec, X_test_vec = preprocess(
+    X_train, X_test, y_train, y_test, X_train_vec, X_test_vec, _ = preprocess(
         df_deduplicated
     )
 
@@ -215,7 +215,7 @@ def train_knn():
     df_deduplicated = (
         df.drop_duplicates()
     )  # We want to use the model trained on deduplicated data, as we believe it to generalize better
-    X_train, X_test, y_train, y_test, X_train_vec, X_test_vec = preprocess(
+    X_train, X_test, y_train, y_test, X_train_vec, X_test_vec, _ = preprocess(
         df_deduplicated
     )
 

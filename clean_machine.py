@@ -1,7 +1,12 @@
+import subprocess
+import threading
+import time
+
 from enum import Enum, auto
 import pandas as pd
 import numpy as np
 import utils
+
 from models import le, vectorizer
 import models
 
@@ -12,8 +17,8 @@ preferences = {
 }
 
 SETTINGS = {
-   'tts': False,
-   'closest_match': False,
+   'tts': True,
+   'closest_match': True,
    'model': 'LOG_REG',
    'skip_requirements': False
 }
@@ -51,7 +56,6 @@ def collect_config():
     print(f"- Skip Requirements: {config['skip_requirements']}")
 
 
-
 class State(Enum):
 
     # "Process" States
@@ -68,7 +72,7 @@ class State(Enum):
     PROVIDE_POSTCODE = auto()
     APOLOGIZE = auto()
     EXIT = auto()
-
+    
     
     CHECK_AREA = auto()
     CHECK_FOOD = auto() 
@@ -90,8 +94,10 @@ class RestaurantRecommender():
         self.food_type = None
         self.price_range = None
         self.special_feature = None
-        self.matched_restaurant=None
+        self.matching_restaurants = None
+        self.current_index = 0  # To track the current restaurant being recommended
         self.info_provided = False
+        
         if SETTINGS.get('model') == 'LOG_REG':
             self.log_reg = models.train_log_reg()
         elif SETTINGS.get('model') == 'KNN':
@@ -104,11 +110,24 @@ class RestaurantRecommender():
         self.food_type = None
         self.price_range = None
     
+    def output_utterance(self, system_utterance):
+        if SETTINGS.get('tts') is True:
+            print(system_utterance)
+            utils.speak(system_utterance)
+        else:
+            print(system_utterance)
+            
     def collect_input(self, system_utterance):
     ### Collecting user input and extracting the dialog_act
-        user_utterance = input(system_utterance)
+        if SETTINGS.get('tts') is True:
+            print(system_utterance)
+            utils.speak(system_utterance)
+            user_utterance = input(">")
+        else:
+            user_utterance = input(system_utterance + "\n")
+        
         dialog_act = self.predict_dialog_act(user_utterance)
-    
+
         return dialog_act, user_utterance.lower()
 
     def predict_dialog_act(self, utterance):
@@ -124,27 +143,20 @@ class RestaurantRecommender():
         
         return prediction_label
     
+    
     def find_restaurant(self):
     ### Find a restaurant that will match stated preference criteria.
 
         restaurant_match_df = self.restaurant_df.copy()
         
         # Handle 'any' inputs
-        if self.area == 'any':
-            pass 
-        else:
+        if self.area != 'any':
             restaurant_match_df = restaurant_match_df[restaurant_match_df['area'].str.lower() == self.area.lower()]
-
-        if self.food_type == 'any':
-            pass
-        else:
+        if self.food_type  != 'any':
             restaurant_match_df = restaurant_match_df[restaurant_match_df['food'].str.lower() == self.food_type.lower()]
-
-        if self.price_range == 'any':
-            pass
-        else: 
+        if self.price_range  != 'any':
             restaurant_match_df = restaurant_match_df[restaurant_match_df['pricerange'].str.lower() == self.price_range.lower()]
-
+        
         # Return exact match or closest match
         if not restaurant_match_df.empty:
             return restaurant_match_df, "exact_match"
@@ -154,33 +166,23 @@ class RestaurantRecommender():
             return restaurant_match_df, "empty"
 
         # Find closest matches
-        closest_match_df = self.restaurant_df.copy()
-        
+        closest_match_df = self.restaurant_df.copy() 
         if self.area != 'any':
             closest_match_df = closest_match_df[closest_match_df['area'].str.lower() == self.area.lower()]
-
         if self.food_type != 'any':
             closest_match_df = closest_match_df[closest_match_df['food'].str.lower() == self.food_type.lower()]
-
         if not closest_match_df.empty:
             return closest_match_df, "price_range"
-
-        
         if self.price_range != 'any':
             closest_match_df = closest_match_df[closest_match_df['pricerange'].str.lower() == self.price_range.lower()]
-
         if self.food_type != 'any':
             closest_match_df = closest_match_df[closest_match_df['food'].str.lower() == self.food_type.lower()]
-
         if not closest_match_df.empty:
-            return closest_match_df, "area"
-        
+            return closest_match_df, "area" 
         if self.area != 'any':
             closest_match_df = closest_match_df[closest_match_df['area'].str.lower() == self.area.lower()]
-
         if self.price_range != 'any':
             closest_match_df = closest_match_df[closest_match_df['pricerange'].str.lower() == self.food_type.lower()]
-
         if not closest_match_df.empty:
             return closest_match_df, "area"
 
@@ -205,19 +207,25 @@ class RestaurantRecommender():
 
     def give_recommendation(self):
     ### Output correct Restaurant Recommendation
-    
+        # Save the currently recommended restaurant
+        self.current_recommendation = self.matching_restaurants.iloc[0]
+
         if self.mismatch_reason == 'exact_match':
-            utils.output_utterance(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food in the {self.matched_restaurant.area.values[0].title()} of town, and has {self.matched_restaurant.pricerange.values[0].title()} prices")
+            self.output_utterance(f"""Restaurant {self.current_recommendation.restaurantname} serves {self.current_recommendation.food} food in the {self.current_recommendation.area} of town, and has {self.current_recommendation.pricerange} prices""")
         if SETTINGS.get('closest_match') is True:
             if self.mismatch_reason == 'area':
-                utils.output_utterance(f"Sorry, we didn't find a matching restaurant in the {self.area} of town, but")
-                utils.output_utterance(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food, in the {self.matched_restaurant.area.values[0].title()}  of town and has {self.matched_restaurant.pricerange.values[0].title()} prices")
+                self.output_utterance(f"Sorry, we didn't find a matching restaurant in the {self.area} of town, but")
+                self.output_utterance(f""""Restaurant {self.current_recommendation.restaurantname} serves {self.current_recommendation.food} food, in the {self.current_recommendation.area}  of town and has {self.current_recommendation.pricerange} prices""")
             elif self.mismatch_reason == 'food_type': 
-                utils.output_utterance(f"Sorry, we didn't find a restaurant serving {self.food_type} type of food, but")
-                utils.output_utterance(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} food, in the {self.matched_restaurant.area.values[0].title()}  of town and has {self.matched_restaurant.pricerange.values[0].title()} prices")
+                self.output_utterance(f"Sorry, we didn't find a restaurant serving {self.food_type} type of food, but")
+                self.output_utterance(f""""Restaurant {self.current_recommendation.restaurantname} serves {self.current_recommendation.food} food, in the {self.current_recommendation.area} of town and has {self.current_recommendation.pricerange} prices""")
             elif self.mismatch_reason == 'price_range':
-                utils.output_utterance(f"Sorry, we didn't find a matching restaurant in {self.price_range} price range, but")
-                utils.output_utterance(f"Restaurant {self.matched_restaurant.restaurantname.values[0].title()} serves {self.matched_restaurant.food.values[0].title()} in the {self.matched_restaurant.area.values[0].title()} part of town and prices are {self.matched_restaurant.pricerange.values[0].title()}")
+                self.output_utterance(f"Sorry, we didn't find a matching restaurant in {self.price_range} price range, but")
+                self.output_utterance(f""""Restaurant {self.current_recommendation.restaurantname} serves {self.current_recommendation.food} in the {self.current_recommendation.area} part of town and prices are {self.current_recommendation.pricerange}""")
+        
+        # Remove the recommendation from the list of remaining ones
+        self.matching_restaurants = self.matching_restaurants.iloc[1:]
+        self.info_provided = True
         
     
     def doesnt_care(self, utterance):
@@ -259,14 +267,16 @@ class RestaurantRecommender():
         for key, options in keywords.items():
             # Check for exact match
             for option in options:
-                print(f"exact check, {option}, {utterance}")
+                #print(f"exact check, {option}, {utterance}")
                 
                 if option in utterance:
                     setattr(self, key, option)
                     print(f"{key} updated to {option}")
                     print(f" Area {self.area} Food {self.food_type} Price {self.price_range}")
                     break
-
+                else: 
+                    continue
+            
             # If no exact match, check fuzzy match  
             print("fuzzy check")
             for option in options:
@@ -292,7 +302,8 @@ class RestaurantRecommender():
             if dialog_act == 'inform':
                 if self.doesnt_care(user_utterance) is True:
                     self.area = 'any'
-                self.extract_preferences(user_utterance)
+                else:
+                    self.extract_preferences(user_utterance)
                 return State.CHECK_AREA
             else:
                 return State.ASK_AREA
@@ -334,15 +345,14 @@ class RestaurantRecommender():
                 return State.ASK_PRICE
             
         elif current_state == State.CHECK_RESTAURANT:
-            self.matched_restaurants, self.mismatch_reason = self.find_restaurant()
+            self.matching_restaurants, self.mismatch_reason = self.find_restaurant()
             
-            if self.matched_restaurants.empty is True:
+            if self.matching_restaurants.empty is True:
                 return State.NO_RESTAURANT
             else:
                 return State.ASK_REQUIREMENTS
             
         elif current_state == State.NO_RESTAURANT:
-            #utils.output_utterance("Unfortunately we do dont have a restaurant in our database that matches your criteria.")
             self.clear_state() 
             
             return State.ASK_AREA
@@ -358,11 +368,11 @@ class RestaurantRecommender():
                 return State.ASK_REQUIREMENTS
 
         elif current_state == State.FILTER_RESTAURANT:
-            self.matched_restaurant = self.filter_restaurants(self.matched_restaurants)
+            self.matching_restaurants = self.filter_restaurants(self.matching_restaurants)
             return State.CHECK_RESTAURANT_NO2
         
         elif current_state == State.CHECK_RESTAURANT_NO2:
-            if self.matched_restaurant is not None:
+            if self.matching_restaurants is not None:
                 return State.PROVIDE_RECOMMENDATION
             else:
                 return State.NO_RESTAURANT
@@ -370,6 +380,10 @@ class RestaurantRecommender():
         elif current_state == State.PROVIDE_RECOMMENDATION:
             if dialog_act == 'request':
                 return State.CLASSIFY_REQUEST
+            elif dialog_act == 'reqalts':
+                return State.PROVIDE_RECOMMENDATION
+            elif dialog_act in ['bye', 'thankyou']:
+                return State.EXIT
             else:
                 return State.PROVIDE_RECOMMENDATION 
             
@@ -384,7 +398,7 @@ class RestaurantRecommender():
 
         elif current_state == State.CHECK_PHONE:
             # Check if phone available
-            if self.matched_restaurant.phone is not None:
+            if self.matching_restaurants.phone is not None:
                 return State.PROVIDE_PHONE
             else:
                 return State.APOLOGIZE
@@ -394,7 +408,7 @@ class RestaurantRecommender():
 
         elif current_state == State.CHECK_ADDRESS:
             # Check if address available
-            if self.matched_restaurant.addr is not None:
+            if self.matching_restaurants.addr is not None:
                 return State.PROVIDE_ADDRESS
             else:
                 return State.APOLOGIZE
@@ -404,7 +418,7 @@ class RestaurantRecommender():
 
         elif current_state == State.CHECK_POSTCODE:
             # Check if postcode available
-            if self.matched_restaurant.postcode is not None:
+            if self.matching_restaurants.postcode is not None:
                 return State.PROVIDE_POSTCODE
             else:
                 return State.APOLOGIZE
@@ -439,72 +453,77 @@ class RestaurantRecommender():
                 else:
                     dialog_act, user_utterance = self.collect_input("Hello! How may I help you?")
 
-            elif next_state == State.ASK_AREA:
+            elif next_state == State.ASK_AREA and self.area is None:
+                
                 # Ask for area preference
                 if last_state is State.ASK_AREA:
                     dialog_act, user_utterance = self.collect_input("What area would you like to eat in? Choose from centre, east, west, south and north.")
-                    pass
-                dialog_act, user_utterance = self.collect_input("In which area are you looking for a restaurant?")
+                else:
+                    dialog_act, user_utterance = self.collect_input("In which area are you looking for a restaurant?")
             
-            elif next_state == State.ASK_FOOD:
+            elif next_state == State.ASK_FOOD and self.food_type is None:
                 # Ask for food preference
                 if last_state is State.ASK_FOOD:
                     dialog_act, user_utterance = self.collect_input("We don't seem to have restaurants of that type, try a different one?")
-                    pass
-                dialog_act, user_utterance = self.collect_input("What type of food do you prefer?")
+                else:
+                    dialog_act, user_utterance = self.collect_input("What type of food do you prefer?")
                 
-            elif next_state == State.ASK_PRICE:
+            elif next_state == State.ASK_PRICE and self.price_range is None:
                 # Ask for price range
                 if last_state is State.ASK_PRICE:
                     dialog_act, user_utterance = self.collect_input("What prices do you prefer? You can choose from cheap, moderate and expensive.")
-                    pass
-                dialog_act, user_utterance = self.collect_input("What price range do you prefer?")
+                else:
+                    dialog_act, user_utterance = self.collect_input("What price range do you prefer?")
                 
             elif next_state == State.ASK_REQUIREMENTS:
                 # Ask for any other preferences
                 if last_state is State.ASK_REQUIREMENTS:
                     dialog_act, user_utterance = self.collect_input("Do you have special wishes? You can choose from touristic, romantic, assigned seats or children friendly.")
-                    pass
-                dialog_act, user_utterance = self.collect_input("Do you have any additional requirements for the restaraunt?")
+                else:
+                    dialog_act, user_utterance = self.collect_input("Do you have any additional requirements for the restaurant?")
                 
             elif next_state == State.PROVIDE_RECOMMENDATION:
                 # Provide restaurant recommendation
-                if self.info_provided is True:
+                if dialog_act == 'reqalts':
+                    if self.matching_restaurants.empty is True:
+                        self.output_utterance("Unfortunately there are no other restaurants matching your criteria.")
+                        dialog_act, user_utterance = self.collect_input("Can I help you with anything else?")
+                    else:
+                        self.give_recommendation()
+                elif self.info_provided is True:
                     dialog_act, user_utterance = self.collect_input("Can I help you with anything else?")
-                    pass
                 else:
                     self.give_recommendation()
                     
             elif next_state == State.NO_RESTAURANT:
                 # Inform there's no matches
-                print("Unfortunately we do dont have a restaurant in our database that matches your criteria.")
-                print("Please try searching with differrent criteria")
+                self.output_utterance(f"Unfortunately we do dont have a {self.food_type} restaurant in the {self.area} in {self.price_range} price range.")
+                self.output_utterance("Please try searching with differrent criteria")
                 
             elif next_state == State.PROVIDE_PHONE:
                 # Provide restaurant phone number
-                utils.output_utterance(f"The phone number of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.phone}")
+                self.output_utterance(f"The phone number of restaurant {self.current_recommendation.restaurantname} is {self.current_recommendation.phone}")
 
             elif next_state == State.PROVIDE_ADDRESS:
                 # Provide restaurant address
-                utils.output_utterance(f"The address of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.addr}")
+                self.output_utterance(f"The address of restaurant {self.current_recommendation.restaurantname} is {self.current_recommendation.addr}")
 
             elif next_state == State.PROVIDE_POSTCODE:
                 # Provide restaurant postcode
-                utils.output_utterance(f"The postcode of restaurant {self.matched_restaurant.restaurantname} is {self.matched_restaurant.postcode}")
+                self.output_utterance(f"The postcode of restaurant {self.current_recommendation.restaurantname} is {self.current_recommendation.postcode}")
 
             elif next_state == State.APOLOGIZE:
                 # Apologize that info is not available
-                print("Unfortunately this information is not available, I apologise for the inconvenience.")
+                self.output_utterance("Unfortunately this information is not available, I apologise for the inconvenience.")
                 
             elif next_state == State.EXIT:
                 # Say goodbye
-                print("Hope you enjoyed using our system, see you next time!")
+                self.output_utterance("Hope you enjoyed using our system, see you next time!")
                 exit
                 
             
             #dialog_act = self.predict_dialog_act(user_utterance)
             
-
             last_state = current_state
             current_state = next_state
             
