@@ -1,6 +1,7 @@
 import sys
 import pandas as pd
 import numpy as np
+import config
 
 from collections import defaultdict
 from sklearn.preprocessing import LabelEncoder
@@ -15,6 +16,11 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 le = LabelEncoder() 
 vectorizer = CountVectorizer(binary=True, strip_accents='unicode',
                                     max_features=90000)
+log_reg = LogisticRegression(max_iter=1000)
+knn = KNeighborsClassifier(n_neighbors=174)
+
+LOG_REG_TRAINED = False
+KNN_TRAINED = False
 
 def load_file(file_path:str = "dialog_acts.dat") -> pd.DataFrame:
 # Load the file with labels in utterances
@@ -198,7 +204,7 @@ def predictions_process(df:pd.DataFrame):
     return log_regression, decision_tree, knn
 
 
-def train_models():
+def train_log_reg():
     # To be used ad-hoc, by the StateMachine
     df = load_file()
     df_deduplicated = df.drop_duplicates() # We want to use the model trained on deduplicated data, as we believe it to generalize better
@@ -209,6 +215,16 @@ def train_models():
     log_regression.fit(X_train_vec, y_train)
     
     return log_regression
+def train_knn():
+    # To be used ad-hoc, by the StateMachine
+    df = load_file()
+    df_deduplicated = df.drop_duplicates() # We want to use the model trained on deduplicated data, as we believe it to generalize better
+    X_train, X_test, y_train, y_test, X_train_vec, X_test_vec = preprocess(df_deduplicated)
+    
+    knn = KNeighborsClassifier(n_neighbors=147) #Choose K according rule: sqrt(N) where N is number of instances
+    knn.fit(X_train_vec, y_train)
+    
+    return knn
     
     
 def main():
@@ -267,4 +283,32 @@ def main():
     
 if __name__ == "__main__":
     main()
-   
+
+
+class Models():
+    def __init__(self):
+        
+        log_reg = train_log_reg()
+        knn = train_knn()
+        
+    def predict_dialog_act(utterance, model:str = "log_reg"):
+        # Predict dialog act with a chosed model
+        global LOG_REG_TRAINED, KNN_TRAINED
+        if model == 'log_reg' and LOG_REG_TRAINED is False:
+            log_reg = train_log_reg()
+            LOG_REG_TRAINED = True
+        elif model == "knn" and KNN_TRAINED is False:
+            knn = train_knn()
+            KNN_TRAINED = True
+        
+        custom_message_vec = vectorizer.transform([utterance])
+        if model == "log_reg":
+            prediction = log_reg.predict(custom_message_vec)
+        elif model == "knn":
+            prediction = knn.predict(custom_message_vec)
+            
+        prediction_1d = np.array([prediction]).ravel() # Change shape to pacify a warning from LabelEncoder
+        prediction_label = le.inverse_transform(prediction_1d)
+        print(f"PREDICTED: {prediction_label}")
+            
+        return prediction_label 

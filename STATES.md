@@ -79,16 +79,4 @@ post code and address
 
 
 
-# HowDoWeDoThis?
-1. World vs International cuisine
-We're given test prompts:
-*I'm looking for world food
-I want a restaurant that serves world food*
-
-But there's no "World" cuisine restaurant in the list, we have just "International", which should probably be the match. 
-
-2. Handling for diff dialog_acts in different states. 
-3. Handling for 'don't care' type of preference
-
-
 
