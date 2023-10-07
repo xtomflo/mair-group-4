@@ -1,5 +1,7 @@
 from fuzzywuzzy import fuzz
- 
+import pyttsx3
+import os
+    
 rules = [
     (("cheap", "good food"), "touristic", True),
     (("romanian",), "touristic", False),
@@ -7,6 +9,7 @@ rules = [
     (("long stay",), "children", False),
     (("busy",), "romantic", False),
     (("long stay",), "romantic", True),
+    ((), "none", True),
 ]
 
 def infer_properties(restaurant_properties):
@@ -22,7 +25,8 @@ def infer_properties(restaurant_properties):
     return inferred_properties
 
 
-
+def speak(text):
+    os.system(f'say {text}')
 
 def classifyRequest(utterance):
         if "address"  in utterance:
@@ -32,12 +36,7 @@ def classifyRequest(utterance):
         if "phone" in utterance: 
             return "phone"
         
-def output_utterance(utterance):
-    ### Output system utterances to the user
-    print(utterance)
-    #if CONFIG_TTS:
-    #    subprocess.call(["say", utterance])
-            
+
 def fuzzy_keyword_match(keyword, text, threshold=80):
     
     words = text.lower().split()
