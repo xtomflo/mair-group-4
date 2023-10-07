@@ -29,31 +29,31 @@ def collect_config():
     # Text-to-speech
     tts = input("Enable text-to-speech? (y/n)")
     if tts.lower() == 'y':
-        config['tts'] = True
+        SETTINGS['tts'] = True
 
-    # Speech-to-text   
-    stt = input("Enable speech-to-text? (y/n)")
+    # Closest Match   
+    stt = input("Enable Closest Match? (y/n)")
     if stt.lower() == 'y':
-        config['stt'] = True
+        SETTINGS['closest_match'] = True
     
     # Choice of model
-    model = input("Choose model (A/B)")
+    model = input("Choose model (A - LOG_REG/B - KNN)")
     if model.lower() == 'a':
-        config['model'] = 'A'
+        SETTINGS['model'] = 'LOG_REG'
     elif model.lower() == 'b':
-        config['model'] = 'B'
+        SETTINGS['model'] = 'KNN'
 
     # Skip requirements
     skip = input("Skip requirements? (y/n)")
     if skip.lower() == 'y':
-        config['skip_requirements'] = True
+        SETTINGS['skip_requirements'] = True
     
     # Print summary
     print("\nSelected configuration:")
-    print(f"- TTS: {config['tts']}")   
-    print(f"- STT: {config['stt']}")
-    print(f"- Model: {config['model']}")
-    print(f"- Skip Requirements: {config['skip_requirements']}")
+    print(f"- TTS: {SETTINGS['tts']}")   
+    print(f"- STT: {SETTINGS['closest_match']}")
+    print(f"- Model: {SETTINGS['model']}")
+    print(f"- Skip Requirements: {SETTINGS['skip_requirements']}")
 
 
 class State(Enum):
@@ -532,6 +532,8 @@ class RestaurantRecommender():
 
 
 def main():
+    
+    collect_config()
     
     recommender = RestaurantRecommender()
     
