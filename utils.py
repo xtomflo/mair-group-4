@@ -95,12 +95,23 @@ def extract_keyword(key,word):
     return (key,None)
 
 #The idea is that we go through the utterance and search for words that are correlated with the 3 different properties that we are trying to extract
-def pattern_matching(utterance):
+def pattern_matching(utterance,current_state):
+    res={}
     utterance=(utterance.replace(',', ''))
     utterance=(utterance.replace("don't care", 'dontcare'))
     utterance=(utterance.replace("doesn't matter", 'doesntmatter'))
-    value=None
-    res={}
+    for v in dont_care_words:
+            if levenshtein_distance(v,utterance)<2:
+                if current_state.value==2: # enum for ask area state
+                   res['area']='any'
+                   return res
+                if current_state.value==3: # enum for ask food state
+                   res['food_type']='any'
+                   return res
+                if current_state.value==4: # enum for ask price state
+                   res['price_range']='any'
+                   return res
+    value=None    
     words = utterance.lower().split()
     for (i,w) in enumerate(words):
         if w=='price' or  w=='price_range' or w=='cost' or w=='priced' :
@@ -157,14 +168,16 @@ def pattern_matching(utterance):
 
     return res
 
-def getReasons(feature): 
+def get_reasons(feature): 
+    """in this funcition we get the antecedents that were used to make a conclusion about the specific feature"""
     for antedecents, consequent, value in rules:
             if value is True and consequent==feature:
                 return antedecents
-def getReasoningInWords(feature):
+def get_reasoning_in_words(feature):
+    """in this funcition convert the antecedents to sentences, so that we can output them to the user in the give_recommendation function"""
     res=""
     addedAnd=False
-    antedecents=getReasons(feature)
+    antedecents=get_reasons(feature)
     for a in antedecents:
         if a =="good food":
             res+="it has good food"

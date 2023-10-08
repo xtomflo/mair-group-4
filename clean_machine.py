@@ -224,7 +224,7 @@ class RestaurantRecommender():
                 self.output_utterance(f""""Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } in the {string.capwords(self.current_recommendation.area) } part of town and prices are {string.capwords(self.current_recommendation.pricerange) }""")
         
         if self.special_feature is not None:
-            reasoning=utils.getReasoningInWords(self.special_feature)
+            reasoning=utils.get_reasoning_in_words(self.special_feature)
             res="Restaurant "+str(self.current_recommendation.restaurantname) +" is also "+ str(self.special_feature)+ ", because "
             res+=reasoning
             self.output_utterance(res)
@@ -233,7 +233,7 @@ class RestaurantRecommender():
         self.info_provided = True
         
         
-    def extract_preferences(self, utterance):
+    def extract_preferences(self, utterance,current_state):
     ### Extract preferences from the utterance of the user by means of fuzzy keyword matching
         print(f"Extracting Preference {utterance}")
         
@@ -257,7 +257,7 @@ class RestaurantRecommender():
         if 'asian' in utterance:
             utterance = utterance.replace("asian", "asian oriental")
                         
-        preferences=utils.pattern_matching(utterance)
+        preferences=utils.pattern_matching(utterance,current_state)
         for key, options in keywords.items():
             # Check for exact match
             for option in options:
@@ -296,7 +296,7 @@ class RestaurantRecommender():
 
         elif current_state == State.ASK_AREA:
             if dialog_act == 'inform':
-                self.extract_preferences(user_utterance)
+                self.extract_preferences(user_utterance,current_state)
                 return State.CHECK_AREA
             else:
                 return State.ASK_AREA
@@ -309,7 +309,7 @@ class RestaurantRecommender():
             
         elif current_state == State.ASK_FOOD:
             if dialog_act == 'inform':
-                self.extract_preferences(user_utterance)
+                self.extract_preferences(user_utterance,current_state)
                 return State.CHECK_FOOD
             else:  
                 return State.ASK_FOOD
@@ -322,7 +322,7 @@ class RestaurantRecommender():
 
         elif current_state == State.ASK_PRICE:
             if dialog_act == 'inform':
-                self.extract_preferences(user_utterance)
+                self.extract_preferences(user_utterance,current_state)
                 return State.CHECK_PRICE
             else:
                 return State.ASK_PRICE
@@ -350,7 +350,7 @@ class RestaurantRecommender():
         
         elif current_state == State.ASK_REQUIREMENTS:
             if dialog_act == 'inform':
-                self.extract_preferences(user_utterance)
+                self.extract_preferences(user_utterance,current_state)
                 if self.special_feature is not None:
                     return State.FILTER_RESTAURANT
             elif dialog_act == 'negate':
