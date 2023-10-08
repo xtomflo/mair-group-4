@@ -142,7 +142,7 @@ def pattern_matching(utterance):
             if value is not None:
                 if key not in res:
                     res[key]=value
-        # in case where the adjective which is describing the restaurnat we intially don't know for which property it is supposed to be, so first we need to 
+        # in case where the adjective which is describing the restaurnat we intially don't know for which property it is supposed to be, so we pass it without a key and we check all the possibilities
         elif w=='restaurant':
             if i>0:
                 key,value=extract_keyword(None,words[i-1])
@@ -157,7 +157,22 @@ def pattern_matching(utterance):
 
     return res
 
-
-
-u="Find a Cuban restaurant,  location doesn't matter "
-print(pattern_matching(u))
+def getReasons(feature): 
+    for antedecents, consequent, value in rules:
+            if value is True and consequent==feature:
+                return antedecents
+def getReasoningInWords(feature):
+    res=""
+    addedAnd=False
+    antedecents=getReasons(feature)
+    for a in antedecents:
+        if a =="good food":
+            res+="it has good food"
+        elif a=="long stay":
+            res+="it is suitable for a long stay"
+        else:
+           res+="it is " +str(a)
+        if len(antedecents)==2 and not addedAnd:
+            res+=" and "
+            addedAnd=True
+    return res

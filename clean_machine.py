@@ -20,7 +20,8 @@ SETTINGS = {
    'tts': True,
    'closest_match': True,
    'model': 'LOG_REG',
-   'skip_requirements': False
+   'skip_requirements': False,
+   'use_special_features': False
 }
     
 def collect_config():
@@ -43,16 +44,22 @@ def collect_config():
     elif model.lower() == 'b':
         SETTINGS['model'] = 'KNN'
 
+    use_special_features = input("Do you want to be able to add special features? (y/n)")
+    if use_special_features.lower() == 'y':
+        SETTINGS['use_special_features'] = True
+    
     # Skip requirements
     skip = input("Skip requirements? (y/n)")
     if skip.lower() == 'y':
         SETTINGS['skip_requirements'] = True
-    
+
+
     # Print summary
     print("\nSelected configuration:")
     print(f"- TTS: {SETTINGS['tts']}")   
     print(f"- STT: {SETTINGS['closest_match']}")
     print(f"- Model: {SETTINGS['model']}")
+    print(f"- Special features: {SETTINGS['use_special_features']}")
     print(f"- Skip Requirements: {SETTINGS['skip_requirements']}")
 
 
@@ -189,14 +196,6 @@ class RestaurantRecommender():
         return closest_match_df, "empty"
 
     
-    def classify_request(self,utterance):
-            if "address"  in utterance:
-                return "address"
-            if "postcode"  in utterance:
-                return "postcode"
-            if "phone" in utterance: 
-                return "phone"
-            
     def filter_restaurants(self, restaurants):
     ### Filter restaurants for ones matching special feature requests, like touristic, romantic etc. 
     
@@ -223,12 +222,14 @@ class RestaurantRecommender():
                 self.output_utterance(f"Sorry, we didn't find a matching restaurant in {self.price_range} price range, but")
                 self.output_utterance(f""""Restaurant {self.current_recommendation.restaurantname} serves {self.current_recommendation.food} in the {self.current_recommendation.area} part of town and prices are {self.current_recommendation.pricerange}""")
         
+        if self.special_feature is not None:
+            reasoning=utils.getReasoningInWords(self.special_feature)
+            res="Restaurant "+str(self.current_recommendation.restaurantname) +" is also "+ str(self.special_feature)+ ", because "
+            res+=reasoning
+            self.output_utterance(res)
         # Remove the recommendation from the list of remaining ones
         self.matching_restaurants = self.matching_restaurants.iloc[1:]
         self.info_provided = True
-        
-    
-   
         
         
     def extract_preferences(self, utterance):
@@ -259,14 +260,9 @@ class RestaurantRecommender():
         for key, options in keywords.items():
             # Check for exact match
             for option in options:
-                #print(f"exact check, {option}, {utterance}")
-                
                 if option in utterance:
                     if key not in preferences:
                         preferences[key]=option
-                    #setattr(self, key, option)
-                    #print(f"{key} updated to {option}")
-                    #print(f" Area {self.area} Food {self.food_type} Price {self.price_range}")
                     break
                 else: 
                     continue
@@ -275,7 +271,6 @@ class RestaurantRecommender():
                 print("fuzzy check")
                 for option in options:
                     if utils.fuzzy_keyword_match(option, utterance):
-                        #setattr(self, key, option)
                         if key is not preferences:
                             preferences[key]=option
                             print(f"{key} fuzzily updated to {option}")
@@ -300,9 +295,6 @@ class RestaurantRecommender():
 
         elif current_state == State.ASK_AREA:
             if dialog_act == 'inform':
-               # if self.doesnt_care(user_utterance) is True:
-                #    self.area = 'any'
-               # else:
                 self.extract_preferences(user_utterance)
                 return State.CHECK_AREA
             else:
@@ -316,8 +308,6 @@ class RestaurantRecommender():
             
         elif current_state == State.ASK_FOOD:
             if dialog_act == 'inform':
-                #if self.doesnt_care(user_utterance) is True:
-             #       self.food_type = 'any'
                 self.extract_preferences(user_utterance)
                 return State.CHECK_FOOD
             else:  
@@ -331,8 +321,6 @@ class RestaurantRecommender():
 
         elif current_state == State.ASK_PRICE:
             if dialog_act == 'inform':
-               # if self.doesnt_care(user_utterance) is True:
-               #     self.price_range = 'any'
                 self.extract_preferences(user_utterance)
                 return State.CHECK_PRICE
             else:
@@ -350,8 +338,10 @@ class RestaurantRecommender():
             if self.matching_restaurants.empty is True:
                 return State.NO_RESTAURANT
             else:
-                return State.ASK_REQUIREMENTS
-            
+                if SETTINGS['use_special_features']:
+                    return State.ASK_REQUIREMENTS
+                else:
+                    return State.PROVIDE_RECOMMENDATION
         elif current_state == State.NO_RESTAURANT:
             self.clear_state() 
             
