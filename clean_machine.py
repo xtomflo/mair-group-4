@@ -22,29 +22,29 @@ SETTINGS = {
    'model': 'LOG_REG',
    'skip_requirements': False
 }
-    
+
 def collect_config():
     print("Choose configuration options:")
 
     # Text-to-speech
-    tts = input("Enable text-to-speech? (y/n)")
+    tts = input("Enable text-to-speech? (y/n)\n")
     if tts.lower() == 'y':
         SETTINGS['tts'] = True
 
     # Closest Match   
-    stt = input("Enable Closest Match? (y/n)")
+    stt = input("Enable Closest Match? (y/n)\n")
     if stt.lower() == 'y':
         SETTINGS['closest_match'] = True
     
     # Choice of model
-    model = input("Choose model (A - LOG_REG/B - KNN)")
+    model = input("Choose model (A - LOG_REG/B - KNN)\n")
     if model.lower() == 'a':
         SETTINGS['model'] = 'LOG_REG'
     elif model.lower() == 'b':
         SETTINGS['model'] = 'KNN'
 
     # Skip requirements
-    skip = input("Skip requirements? (y/n)")
+    skip = input("Skip requirements? (y/n)\n")
     if skip.lower() == 'y':
         SETTINGS['skip_requirements'] = True
     
