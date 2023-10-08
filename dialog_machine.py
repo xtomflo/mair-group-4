@@ -587,9 +587,14 @@ class RestaurantRecommender:
 
             elif next_state == State.NO_RESTAURANT:
                 # Inform there's no matches
-                self.output_utterance(
-                    f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range."
-                )
+                if self.special_feature is not None:
+                    self.output_utterance(
+                    f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range, which is also {string.capwords(self.special_feature)}"
+                    )
+                else:
+                    self.output_utterance(
+                        f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range."
+                    )
                 self.output_utterance("Please try searching with differrent criteria")
 
             elif next_state == State.PROVIDE_PHONE:
