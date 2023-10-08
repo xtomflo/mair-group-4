@@ -9,9 +9,18 @@ Dean
 Tomek 
 
 
+<<<<<<< HEAD
 Week 2 Deliverables
 The state transition diagram in graphical form with numbered states
 A working dialog system interface that prints system utterances to the screen and processes user input utterances entered with the keyboard, implementing a state transition function corresponding to the diagram, using predictions from the classifier built in Part 1a as part of the input for state transitions
+=======
+Code is split into 4 files:
+- dialog_machine.py     - main file implementing the dialog machine
+- models.py             - base file with model definitions, baselines, and error analysis
+- utils.py              - file with helper functions
+
+
+>>>>>>> d14f60f4b1fda9b3daace140b421fc09d5b58864
 
 An algorithm identifying user preference statements in the sentences using pattern matching on variable keywords and value keywords on utterances classified as inform, using Levenshtein edit distance if necessary
 A lookup function that retrieves suitable restaurant suggestions from the CSV database matching the preferences as extracted in the implemented algorithm
@@ -102,7 +111,14 @@ We're assuming Python 3.10 is installed, together with pip 23.0.1
 pip3 install --requirement requirements.txt
 ```
 
-2. To run the program navigate to this projects folder in the terminal and run:
+2. Running the application
+
+To start the recommender chatbot:
 ```
-> python load_dialog_act.py dialog-act.dat
+> python3 dialog_machine.py
+```
+
+To run model training, evaluation and error analysis:
+```
+> python3 models.py
 ```

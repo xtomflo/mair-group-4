@@ -16,7 +16,7 @@ SETTINGS = {
     "tts": False,
     "closest_match": False,
     "model": "LOG_REG",
-    "use_special_features": False,
+    "use_special_features": True,
 }
 
 
@@ -41,11 +41,11 @@ def collect_config():
         SETTINGS["model"] = "KNN"
 
     # Use special features
-    use_special_features = input(
-        "Do you want to be able to add special features? (y/n)\n"
+    skip_special_features = input(
+        "Do you want to skip adding special features? (y/n)\n"
     )
-    if use_special_features.lower() == "y":
-        SETTINGS["use_special_features"] = True
+    if skip_special_features.lower() == "y":
+        SETTINGS["use_special_features"] = False
 
     # Print summary
     print("Selected configuration:")
