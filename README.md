@@ -20,9 +20,9 @@ Additional files:
 - dialog_acts.dat       - file with dialog_act required for training the classifiers.
 
 # Instructions 
-```
+
 We're assuming Python 3.10 is installed, together with pip 23.0.1
-```
+
 1. Make sure you have the required libraries installed
 ```
 pip3 install --requirement requirements.txt
@@ -32,12 +32,12 @@ pip3 install --requirement requirements.txt
 
 To start the recommender chatbot:
 ```
-> python3 dialog_machine.py
+python3 dialog_machine.py
 ```
 
 To run model training, evaluation and error analysis:
 ```
-> python3 models.py
+python3 models.py
 ```
 
 
