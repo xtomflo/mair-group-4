@@ -196,7 +196,7 @@ class RestaurantRecommender():
 
         return closest_match_df, "empty"
 
-    
+
     def filter_restaurants(self, restaurants):
     ### Filter restaurants for ones matching special feature requests, like touristic, romantic etc. 
     
@@ -204,6 +204,7 @@ class RestaurantRecommender():
             inferred = utils.infer_properties([r.pricerange, r.food_quality, r.crowdedness, r.length_of_stay])
             if inferred.get(self.special_feature) is True:
                 return restaurants[restaurants.restaurantname == r.restaurantname]
+
 
     def give_recommendation(self):
     ### Output correct Restaurant Recommendation
@@ -485,10 +486,11 @@ class RestaurantRecommender():
                     dialog_act, user_utterance = self.collect_input("Can I help you with anything else?")
                 else:
                     self.give_recommendation()
+                    dialog_act, user_utterance = self.collect_input("Can I help you with anything else?")
                     
             elif next_state == State.NO_RESTAURANT:
                 # Inform there's no matches
-                self.output_utterance(f"Unfortunately we do dont have a {self.food_type} restaurant in the {self.area} in {self.price_range} price range.")
+                self.output_utterance(f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range.")
                 self.output_utterance("Please try searching with differrent criteria")
                 
             elif next_state == State.PROVIDE_PHONE:
