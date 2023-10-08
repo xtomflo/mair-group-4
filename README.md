@@ -11,12 +11,10 @@ Tomek
 
 Code is split into 4 files:
 - dialog_machine.py     - main file implementing the dialog machine
-- error_analysis.py     - code for error analysis, identifying hard utterances, finding edge cases etc
-- models.py             - base file with model definitions and baselines
-> Is the main file. implements the dialog machine, run to start the recommender chatbot.
-```
-> python3 dialog_machine.py
-```
+- models.py             - base file with model definitions, baselines, and error analysis
+- utils.py              - file with helper functions
+
+
 
 # Instructions 
 ```
@@ -27,7 +25,14 @@ We're assuming Python 3.10 is installed, together with pip 23.0.1
 pip3 install --requirement requirements.txt
 ```
 
-2. To run the program navigate to this projects folder in the terminal and run:
+2. Running the application
+
+To start the recommender chatbot:
 ```
-> python load_dialog_act.py dialog-act.dat
+> python3 dialog_machine.py
+```
+
+To run model training, evaluation and error analysis:
+```
+> python3 models.py
 ```
