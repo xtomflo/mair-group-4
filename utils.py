@@ -76,10 +76,13 @@ def extract_keyword(key,word):
     #if it is not None we get the vocabulary for this property and we try to match the adjacent words with some of the words that we have
     if key is not None:
         vocab=keywords[key]
+        #first we prioritize exact matches and then move the levenshtein distance 2 if a result is not found
+        for v in vocab:
+            if v==word:
+                return (key,v)
         for v in vocab:
             if levenshtein_distance(v,word)<3:
                 return (key,v)
-        
         #for the word any we use a smaller leveshtein distance beacuse the word themselves are shorter (any)
         for v in dont_care_words:
             if levenshtein_distance(v,word)<2:
@@ -88,6 +91,10 @@ def extract_keyword(key,word):
     else:
         for keyword in keywords:
             vocab=keywords[keyword]
+            #first we prioritize exact matches and then move the levenshtein distance 2
+            for v in vocab:
+                if v==word:
+                    return (keyword,v)
             for v in vocab:
                 if levenshtein_distance(v,word)<3:
                     return (keyword,v)
