@@ -1,6 +1,3 @@
-import subprocess
-import threading
-import time
 import string
 
 from enum import Enum, auto
@@ -235,7 +232,7 @@ class RestaurantRecommender:
 
         if self.mismatch_reason == "exact_match":
             self.output_utterance(
-                f"""Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } food in the {self.current_recommendation.area} of town, and has {self.current_recommendation.pricerange} prices"""
+                f"Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } food in the {self.current_recommendation.area} of town, and has {self.current_recommendation.pricerange} prices"
             )
 
         # For close matches, a reason is for mismatch is also listed
@@ -245,27 +242,29 @@ class RestaurantRecommender:
                     f"Sorry, we didn't find a matching restaurant in the {string.capwords(self.area) } of town, but"
                 )
                 self.output_utterance(
-                    f""""Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } food, in the {self.current_recommendation.area}  of town and has {self.current_recommendation.pricerange} prices"""
+                    f"Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } food, in the {self.current_recommendation.area}  of town and has {self.current_recommendation.pricerange} prices"
                 )
             elif self.mismatch_reason == "food_type":
                 self.output_utterance(
                     f"Sorry, we didn't find a restaurant serving {string.capwords(self.food_type) } type of food, but"
                 )
                 self.output_utterance(
-                    f""""Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } food, in the {self.current_recommendation.area} of town and has {self.current_recommendation.pricerange} prices"""
+                    f"Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } food, in the {self.current_recommendation.area} of town and has {self.current_recommendation.pricerange} prices"
                 )
             elif self.mismatch_reason == "price_range":
                 self.output_utterance(
                     f"Sorry, we didn't find a matching restaurant in {string.capwords(self.price_range) } price range, but"
                 )
                 self.output_utterance(
-                    f""""Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } in the {self.current_recommendation.area} part of town and prices are {self.current_recommendation.pricerange}"""
+                    f"Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } in the {self.current_recommendation.area} part of town and prices are {self.current_recommendation.pricerange}"
                 )
 
         if self.special_feature is not None:
-            reasoning = utils.get_reasoning_in_words(self.special_feature)
             self.output_utterance(
-                f"Restaurant {string.capwords(self.current_recommendation.restaurantname)} is also {self.special_feature} because {reasoning}"
+                f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range, which is also {string.capwords(self.special_feature)}")
+        else:
+            self.output_utterance(
+                f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range."
             )
         # Remove the recommendation from the list of remaining ones
         self.matching_restaurants = self.matching_restaurants.iloc[1:]
@@ -273,6 +272,7 @@ class RestaurantRecommender:
 
     def extract_preferences(self, utterance, current_state):
         ### Extract preferences from the utterance of the user by means of exact and fuzzy keyword matching
+        # print(f"Extracting Preference {utterance}")
 
         # Define list of keywords that we're looking to match
         keywords = {
@@ -326,7 +326,6 @@ class RestaurantRecommender:
             utterance = utterance.replace("asian", "asian oriental")
 
         preferences = utils.pattern_matching(utterance, current_state)
-        
         for key, options in keywords.items():
             # Check for exact match
             for option in options:
@@ -588,12 +587,9 @@ class RestaurantRecommender:
 
             elif next_state == State.NO_RESTAURANT:
                 # Inform there's no matches
-                if self.special_feature is not None:
-                    f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range, which is also {string.capwords(self.special_feature)}"
-                else:
-                    self.output_utterance(
-                        f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range."
-                    )
+                self.output_utterance(
+                    f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range."
+                )
                 self.output_utterance("Please try searching with differrent criteria")
 
             elif next_state == State.PROVIDE_PHONE:
