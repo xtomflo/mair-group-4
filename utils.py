@@ -45,7 +45,15 @@ def infer_properties(restaurant_properties):
 def speak(text):
     os.system(f'say {text}')
 
-
+dont_care_words = ['any', 'dont care', 'doesnt matter', 'anywhere', 'whatever', 'all']
+def doesnt_care(self, utterance):
+        ### Check if there's an indication of 'don't care' sentiment in the utterance
+        
+        for word in dont_care_words:
+            if fuzzy_keyword_match(word, utterance):
+                return True
+            
+        return False
 
 def classifyRequest(utterance):
         if "address"  in utterance or "location" in utterance or "place" in utterance:
@@ -76,24 +84,27 @@ def extract_keyword(key,word):
     #if it is not None we get the vocabulary for this property and we try to match the adjacent words with some of the words that we have
     if key is not None:
         vocab=keywords[key]
-        #for the word any we use a smaller leveshtein distance beacuse the word itself is short
-        if levenshtein_distance(word,'any')<2:
-            return (key,'any')
         for v in vocab:
             if levenshtein_distance(v,word)<3:
                 return (key,v)
+        
+        #for the word any we use a smaller leveshtein distance beacuse the word themselves are shorter (any)
+        for v in dont_care_words:
+            if levenshtein_distance(v,word)<2:
+                return (key,'any')
     #if it is None we try to match it with all the words from the vocabs, no matter the class
     else:
         for keyword in keywords:
             vocab=keywords[keyword]
             for v in vocab:
                 if levenshtein_distance(v,word)<3:
-                    return (key,v)
+                    return (keyword,v)
     #in case we find no matches we return None for the word, and the same key we got
     return (key,None)
 
 #The idea is that we go through the utterance and search for words that are correlated with the 3 different properties that we are trying to extract
 def pattern_matching(utterance):
+    utterance=(utterance.replace(',', ''))
     value=None
     res={}
     words = utterance.lower().split()
@@ -154,3 +165,5 @@ def pattern_matching(utterance):
 
 
 
+u="Find a Cuban restaurant, whatever price "
+print(pattern_matching(u))

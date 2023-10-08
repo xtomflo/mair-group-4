@@ -228,16 +228,7 @@ class RestaurantRecommender():
         self.info_provided = True
         
     
-    def doesnt_care(self, utterance):
-    ### Check if there's an indication of 'don't care' sentiment in the utterance
-    
-        dont_care_words = ['any', 'dont care', 'doesnt matter', 'anywhere', 'whatever', 'all']
-        
-        for word in dont_care_words:
-            if utils.fuzzy_keyword_match(word, utterance):
-                return True
-            
-        return False
+   
         
         
     def extract_preferences(self, utterance):
@@ -309,10 +300,10 @@ class RestaurantRecommender():
 
         elif current_state == State.ASK_AREA:
             if dialog_act == 'inform':
-                if self.doesnt_care(user_utterance) is True:
-                    self.area = 'any'
-                else:
-                    self.extract_preferences(user_utterance)
+               # if self.doesnt_care(user_utterance) is True:
+                #    self.area = 'any'
+               # else:
+                self.extract_preferences(user_utterance)
                 return State.CHECK_AREA
             else:
                 return State.ASK_AREA
@@ -325,8 +316,8 @@ class RestaurantRecommender():
             
         elif current_state == State.ASK_FOOD:
             if dialog_act == 'inform':
-                if self.doesnt_care(user_utterance) is True:
-                    self.food_type = 'any'
+                #if self.doesnt_care(user_utterance) is True:
+             #       self.food_type = 'any'
                 self.extract_preferences(user_utterance)
                 return State.CHECK_FOOD
             else:  
@@ -340,8 +331,8 @@ class RestaurantRecommender():
 
         elif current_state == State.ASK_PRICE:
             if dialog_act == 'inform':
-                if self.doesnt_care(user_utterance) is True:
-                    self.price_range = 'any'
+               # if self.doesnt_care(user_utterance) is True:
+               #     self.price_range = 'any'
                 self.extract_preferences(user_utterance)
                 return State.CHECK_PRICE
             else:
