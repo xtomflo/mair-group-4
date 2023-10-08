@@ -1,7 +1,7 @@
+import enum
 from fuzzywuzzy import fuzz
 import os
 from Levenshtein import distance as levenshtein_distance
-
 
 dont_care_words = ["any", "dontcare", "doesntmatter", "anywhere", "whatever", "all"]
 keywords = {
@@ -47,6 +47,8 @@ keywords = {
     "price_range": ["moderate", "expensive", "cheap"],
     "special_feature": ["touristic", "assigned seats", "children", "romantic"],
 }
+
+
 rules = [
     (("cheap", "good food"), "touristic", True),
     (("romanian",), "touristic", False),
@@ -59,7 +61,7 @@ rules = [
 
 
 def infer_properties(restaurant_properties):
-    ### Check if properties meet the rules, return the consequences
+    # Check if properties meet the rules, return the consequences
     inferred_properties = {}
 
     # We apply rules in order
@@ -100,9 +102,10 @@ def fuzzy_keyword_match(keyword, text, threshold=80):
             return True
     return False
 
+
 def extract_keyword(key, word):
-    # the key that we get here can only be area, food_type, price_range, or None
-    ### if it is not None we get the vocabulary for this property and we try to match the adjacent words with some of the words that we have
+    ### the key that we get here can only be area, food_type, price_range, or None
+    # if it is not None we get the vocabulary for this property and we try to match the adjacent words with some of the words that we have
     if key is not None:
         vocab = keywords[key]
         # first we prioritize exact matches and then move the levenshtein distance 2 if a result is not found
@@ -132,7 +135,7 @@ def extract_keyword(key, word):
 
 
 def pattern_matching(utterance, current_state):
-    ### The idea is that we go through the utterance and search for words that are correlated with the 3 different properties that we are trying to extract
+    # The idea is that we go through the utterance and search for words that are correlated with the 3 different properties that we are trying to extract
 
     res = {}
     utterance = utterance.replace(",", "")
@@ -217,7 +220,7 @@ def get_reasons(feature):
 def get_reasoning_in_words(feature):
     """in this funcition convert the antecedents to sentences, so that we can output them to the user in the give_recommendation function"""
     res = ""
-    added_and = False
+    addedAnd = False
     antedecents = get_reasons(feature)
     for a in antedecents:
         if a == "good food":
@@ -226,7 +229,7 @@ def get_reasoning_in_words(feature):
             res += "it is suitable for a long stay"
         else:
             res += "it is " + str(a)
-        if len(antedecents) == 2 and not added_and:
+        if len(antedecents) == 2 and not addedAnd:
             res += " and "
-            added_and = True
+            addedAnd = True
     return res

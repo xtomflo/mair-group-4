@@ -1,4 +1,3 @@
-import sys
 import pandas as pd
 import numpy as np
 
@@ -13,9 +12,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score
 
 # Encoder and Vectorizer are used globally(in different functions), so defining here
 le = LabelEncoder()
-vectorizer = CountVectorizer(binary=True, strip_accents="unicode", max_features=90000)
-log_reg = LogisticRegression(max_iter=1000)
-knn = KNeighborsClassifier(n_neighbors=174)
+vectorizer = CountVectorizer()
 
 LOG_REG_TRAINED = False
 KNN_TRAINED = False
@@ -188,6 +185,42 @@ def predictions_process(df: pd.DataFrame):
     y_knn = knn.predict(X_test_vec)
     assess_performance(y_test, y_knn, "K-Nearest Neighbors")
 
+    
+    # Convert label to original form
+    y_test_label = le.inverse_transform(y_test)
+    y_baseline_1_label = le.inverse_transform(y_baseline_1)
+    y_baseline_2_label = le.inverse_transform(y_baseline_2)
+    y_log_reg_label = le.inverse_transform(y_log_reg)
+    y_decision_tree_label = le.inverse_transform(y_decision_tree)
+    y_knn_label = le.inverse_transform(y_knn)
+    
+    # Summarize the results from different models for analysis
+    df_results = pd.DataFrame({
+        'utterance': X_test,
+        'true_labels': y_test_label,
+        'baseline_1': y_baseline_1_label,
+        'baseline_2': y_baseline_2_label,
+        'logistic_regression': y_log_reg_label,
+        'decision_tree': y_decision_tree_label,
+        'knn': y_knn_label
+    })
+    print(df_results)
+    
+    
+    # Count the frequency of misclassified categories for each model
+    for model in ['baseline_2', 'logistic_regression', 'decision_tree', 'knn']:
+        hard_to_predict = df_results[df_results[model] != df_results['true_labels']]['true_labels'].value_counts()
+        print(f"Hard to predict categories for {model}: \n{hard_to_predict}\n")
+        #hard_to_predict.to_csv(f'hard_to_predict_dialogs_{model}.csv')
+
+    # Get all misclassified utterances
+    all_models = ['logistic_regression', 'decision_tree', 'knn']
+    df_results['all_wrong'] = df_results.apply(lambda row: all(row[model] != row['true_labels'] for model in all_models), axis=1)
+    misclassified_samples = df_results[df_results['all_wrong']]
+    print(f"Samples misclassified by all models: \n{misclassified_samples[['utterance','true_labels']]}\n")
+    print(f"Number of samples misclassified by all models: {len(misclassified_samples[['utterance','true_labels']])}")
+
+
     return log_regression, decision_tree, knn
 
 
@@ -228,12 +261,8 @@ def train_knn():
 
 def main():
     # Main function running the whole process and asking for user input
-    if len(sys.argv) < 2:
-        print("To specify a different input file use: python main.py <path_to_dialog-act.dat>")
-        
 
-    file_path = sys.argv[1]
-    df = load_file(file_path)
+    df = load_file()
     
     print("Loaded DataFrame:")
     print(df.head())
@@ -296,32 +325,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-
-class Models:
-    def __init__(self):
-        log_reg = train_log_reg()
-        knn = train_knn()
-
-    def predict_dialog_act(utterance, model: str = "log_reg"):
-        # Predict dialog act with a chosed model
-        global LOG_REG_TRAINED, KNN_TRAINED
-        if model == "log_reg" and LOG_REG_TRAINED is False:
-            log_reg = train_log_reg()
-            LOG_REG_TRAINED = True
-        elif model == "knn" and KNN_TRAINED is False:
-            knn = train_knn()
-            KNN_TRAINED = True
-
-        custom_message_vec = vectorizer.transform([utterance])
-        if model == "log_reg":
-            prediction = log_reg.predict(custom_message_vec)
-        elif model == "knn":
-            prediction = knn.predict(custom_message_vec)
-
-        prediction_1d = np.array(
-            [prediction]
-        ).ravel()  # Change shape to pacify a warning from LabelEncoder
-        prediction_label = le.inverse_transform(prediction_1d)
-        print(f"PREDICTED: {prediction_label}")
-
-        return prediction_label
