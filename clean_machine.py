@@ -264,26 +264,35 @@ class RestaurantRecommender():
         if 'asian' in utterance:
             utterance = utterance.replace("asian", "asian oriental")
                         
+        preferences=utils.pattern_matching(utterance)
         for key, options in keywords.items():
             # Check for exact match
             for option in options:
                 #print(f"exact check, {option}, {utterance}")
                 
                 if option in utterance:
-                    setattr(self, key, option)
-                    print(f"{key} updated to {option}")
-                    print(f" Area {self.area} Food {self.food_type} Price {self.price_range}")
+                    if key not in preferences:
+                        preferences[key]=option
+                    #setattr(self, key, option)
+                    #print(f"{key} updated to {option}")
+                    #print(f" Area {self.area} Food {self.food_type} Price {self.price_range}")
                     break
                 else: 
                     continue
-            
-            # If no exact match, check fuzzy match  
-            print("fuzzy check")
-            for option in options:
-                if utils.fuzzy_keyword_match(option, utterance):
-                    setattr(self, key, option)
-                    print(f"{key} fuzzily updated to {option}")
-                    break
+            if not bool (preferences):
+                # If no exact match, check fuzzy match  
+                print("fuzzy check")
+                for option in options:
+                    if utils.fuzzy_keyword_match(option, utterance):
+                        #setattr(self, key, option)
+                        if key is not preferences:
+                            preferences[key]=option
+                            print(f"{key} fuzzily updated to {option}")
+                        break
+        if not bool (preferences):
+            for key, option in preferences.items(): 
+                setattr(self, key, option)
+                print(f"{key} updated to {option}")
                     
 
     def get_next_state(self, current_state, dialog_act:str = "none", user_utterance:str = ""):
