@@ -1,6 +1,7 @@
 import subprocess
 import threading
 import time
+import string
 
 from enum import Enum, auto
 import pandas as pd
@@ -17,8 +18,8 @@ preferences = {
 }
 
 SETTINGS = {
-   'tts': True,
-   'closest_match': True,
+   'tts': False,
+   'closest_match': False,
    'model': 'LOG_REG',
    'skip_requirements': False
 }
@@ -51,7 +52,7 @@ def collect_config():
     # Print summary
     print("\nSelected configuration:")
     print(f"- TTS: {SETTINGS['tts']}")   
-    print(f"- STT: {SETTINGS['closest_match']}")
+    print(f"- Closest Match: {SETTINGS['closest_match']}")
     print(f"- Model: {SETTINGS['model']}")
     print(f"- Skip Requirements: {SETTINGS['skip_requirements']}")
 
@@ -211,17 +212,17 @@ class RestaurantRecommender():
         self.current_recommendation = self.matching_restaurants.iloc[0]
 
         if self.mismatch_reason == 'exact_match':
-            self.output_utterance(f"""Restaurant {self.current_recommendation.restaurantname} serves {self.current_recommendation.food} food in the {self.current_recommendation.area} of town, and has {self.current_recommendation.pricerange} prices""")
+            self.output_utterance(f"""Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } food in the {string.capwords(self.current_recommendation.area) } of town, and has {string.capwords(self.current_recommendation.pricerange) } prices""")
         if SETTINGS.get('closest_match') is True:
             if self.mismatch_reason == 'area':
-                self.output_utterance(f"Sorry, we didn't find a matching restaurant in the {self.area} of town, but")
-                self.output_utterance(f""""Restaurant {self.current_recommendation.restaurantname} serves {self.current_recommendation.food} food, in the {self.current_recommendation.area}  of town and has {self.current_recommendation.pricerange} prices""")
+                self.output_utterance(f"Sorry, we didn't find a matching restaurant in the {string.capwords(self.area) } of town, but")
+                self.output_utterance(f""""Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } food, in the {string.capwords(self.current_recommendation.area) }  of town and has {string.capwords(self.current_recommendation.pricerange) } prices""")
             elif self.mismatch_reason == 'food_type': 
-                self.output_utterance(f"Sorry, we didn't find a restaurant serving {self.food_type} type of food, but")
-                self.output_utterance(f""""Restaurant {self.current_recommendation.restaurantname} serves {self.current_recommendation.food} food, in the {self.current_recommendation.area} of town and has {self.current_recommendation.pricerange} prices""")
+                self.output_utterance(f"Sorry, we didn't find a restaurant serving {string.capwords(self.food_type) } type of food, but")
+                self.output_utterance(f""""Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } food, in the {string.capwords(self.current_recommendation.area) } of town and has {string.capwords(self.current_recommendation.pricerange) } prices""")
             elif self.mismatch_reason == 'price_range':
-                self.output_utterance(f"Sorry, we didn't find a matching restaurant in {self.price_range} price range, but")
-                self.output_utterance(f""""Restaurant {self.current_recommendation.restaurantname} serves {self.current_recommendation.food} in the {self.current_recommendation.area} part of town and prices are {self.current_recommendation.pricerange}""")
+                self.output_utterance(f"Sorry, we didn't find a matching restaurant in {string.capwords(self.price_range) } price range, but")
+                self.output_utterance(f""""Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } in the {string.capwords(self.current_recommendation.area) } part of town and prices are {string.capwords(self.current_recommendation.pricerange) }""")
         
         # Remove the recommendation from the list of remaining ones
         self.matching_restaurants = self.matching_restaurants.iloc[1:]
@@ -382,7 +383,7 @@ class RestaurantRecommender():
                 return State.CLASSIFY_REQUEST
             elif dialog_act == 'reqalts':
                 return State.PROVIDE_RECOMMENDATION
-            elif dialog_act in ['bye', 'thankyou']:
+            elif dialog_act in ['bye', 'thankyou', 'negate']:
                 return State.EXIT
             else:
                 return State.PROVIDE_RECOMMENDATION 
@@ -502,15 +503,15 @@ class RestaurantRecommender():
                 
             elif next_state == State.PROVIDE_PHONE:
                 # Provide restaurant phone number
-                self.output_utterance(f"The phone number of restaurant {self.current_recommendation.restaurantname} is {self.current_recommendation.phone}")
+                self.output_utterance(f"The phone number of restaurant {string.capwords(self.current_recommendation.restaurantname) } is {self.current_recommendation.phone}")
 
             elif next_state == State.PROVIDE_ADDRESS:
                 # Provide restaurant address
-                self.output_utterance(f"The address of restaurant {self.current_recommendation.restaurantname} is {self.current_recommendation.addr}")
+                self.output_utterance(f"The address of restaurant {string.capwords(self.current_recommendation.restaurantname) } is {self.current_recommendation.addr}")
 
             elif next_state == State.PROVIDE_POSTCODE:
                 # Provide restaurant postcode
-                self.output_utterance(f"The postcode of restaurant {self.current_recommendation.restaurantname} is {self.current_recommendation.postcode}")
+                self.output_utterance(f"The postcode of restaurant {string.capwords(self.current_recommendation.restaurantname) } is {self.current_recommendation.postcode}")
 
             elif next_state == State.APOLOGIZE:
                 # Apologize that info is not available

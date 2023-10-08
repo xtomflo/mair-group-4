@@ -104,7 +104,7 @@ def main():
     df_results['all_wrong'] = df_results.apply(lambda row: all(row[model] != row['true_labels'] for model in all_models), axis=1)
     misclassified_samples = df_results[df_results['all_wrong']]
     print(f"Samples misclassified by all models: \n{misclassified_samples[['utterance','true_labels']]}\n")
-
+    print(f"Number of samples misclassified by all models: {len(misclassified_samples[['utterance','true_labels']])}")
 
 if __name__ == '__main__':
     main()
