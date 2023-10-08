@@ -70,34 +70,44 @@ def fuzzy_keyword_match(keyword, text, threshold=80):
             return True
     return False
 
+#the key that we get here can only be area, food_type, price_range, or None
 
 def extract_keyword(key,word):
+    #if it is not None we get the vocabulary for this property and we try to match the adjacent words with some of the words that we have
     if key is not None:
         vocab=keywords[key]
+        #for the word any we use a smaller leveshtein distance beacuse the word itself is short
         if levenshtein_distance(word,'any')<2:
             return (key,'any')
         for v in vocab:
             if levenshtein_distance(v,word)<3:
                 return (key,v)
+    #if it is None we try to match it with all the words from the vocabs, no matter the class
     else:
         for keyword in keywords:
             vocab=keywords[keyword]
             for v in vocab:
                 if levenshtein_distance(v,word)<3:
                     return (key,v)
+    #in case we find no matches we return None for the word, and the same key we got
     return (key,None)
+
+#The idea is that we go through the utterance and search for words that are correlated with the 3 different properties that we are trying to extract
 def pattern_matching(utterance):
     value=None
     res={}
     words = utterance.lower().split()
     for (i,w) in enumerate(words):
         if w=='price' or  w=='price_range' or w=='cost' or w=='priced' :
+            #we set the key based on the case in which we are in 
             key='price_range'
+            #if there is a next word we pass in onto the other function and try to match it with a word that makes sense to be in proximity to this one
             if i>0:
                 key,value=extract_keyword(key,words[i-1])
             if value is not None:
                 if key not in res:
                     res[key]=value
+            #we do the same with next word if such exists
             if i<len(words)-1:
                 key,value=extract_keyword(key,words[i+1])
             if value is not None:
@@ -127,6 +137,7 @@ def pattern_matching(utterance):
             if value is not None:
                 if key not in res:
                     res[key]=value
+        # in case where the adjective which is describing the restaurnat we intially don't know for which property it is supposed to be, so first we need to 
         elif w=='restaurant':
             if i>0:
                 key,value=extract_keyword(None,words[i-1])
@@ -141,13 +152,5 @@ def pattern_matching(utterance):
 
     return res
 
-
-u="I'm looking for a moderately priced restaurant in the west part of town"
-u2="I'm looking for a restaurant in any area that serves Tuscan food"
-u3="Food italian"
-#print(pattern_matching(u))
-#print(pattern_matching(u2))
-
-print(pattern_matching(u3))
 
 
