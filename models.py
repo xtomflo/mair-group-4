@@ -231,7 +231,6 @@ def main():
     if len(sys.argv) < 2:
         print("To specify a different input file use: python main.py <path_to_dialog-act.dat>")
         
-
     file_path = sys.argv[1]
     df = load_file(file_path)
     

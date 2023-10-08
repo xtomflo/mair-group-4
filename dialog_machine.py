@@ -21,7 +21,6 @@ SETTINGS = {
    'tts': False,
    'closest_match': False,
    'model': 'LOG_REG',
-   'skip_requirements': False,
    'use_special_features': False
 }
 
@@ -44,24 +43,19 @@ def collect_config():
         SETTINGS['model'] = 'LOG_REG'
     elif model.lower() == 'b':
         SETTINGS['model'] = 'KNN'
-
-    use_special_features = input("Do you want to be able to add special features? (y/n)")
+    
+    # Use special features
+    use_special_features = input("Do you want to be able to add special features? (y/n)\n")
     if use_special_features.lower() == 'y':
         SETTINGS['use_special_features'] = True
     
-    # Skip requirements
-    skip = input("Skip requirements? (y/n)\n")
-    if skip.lower() == 'y':
-        SETTINGS['skip_requirements'] = True
-
 
     # Print summary
-    print("\nSelected configuration:")
+    print("Selected configuration:")
     print(f"- TTS: {SETTINGS['tts']}")   
     print(f"- Closest Match: {SETTINGS['closest_match']}")
     print(f"- Model: {SETTINGS['model']}")
     print(f"- Special features: {SETTINGS['use_special_features']}")
-    print(f"- Skip Requirements: {SETTINGS['skip_requirements']}")
 
 
 class State(Enum):
@@ -81,7 +75,7 @@ class State(Enum):
     APOLOGIZE = auto()
     EXIT = auto()
     
-    
+    # "Check" States
     CHECK_AREA = auto()
     CHECK_FOOD = auto() 
     CHECK_PRICE = auto()
@@ -92,6 +86,7 @@ class State(Enum):
     CHECK_POSTCODE = auto()
     CHECK_PHONE = auto()
     FILTER_RESTAURANT = auto()
+
 
 class RestaurantRecommender():
     
@@ -114,11 +109,15 @@ class RestaurantRecommender():
         self.restaurant_df = pd.read_csv('restaurant_info.csv')
     
     def clear_state(self):
+    ### When no match is found for the given set of preferences, we clean them to start collecting again.
         self.area = None
         self.food_type = None
         self.price_range = None
+        self.special_feature = None
+        self.matching_restaurants = None
     
     def output_utterance(self, system_utterance):
+    ### General output function to enable Text-to-Speech
         if SETTINGS.get('tts') is True:
             print(system_utterance)
             utils.speak(system_utterance)
@@ -139,6 +138,7 @@ class RestaurantRecommender():
         return dialog_act, user_utterance.lower()
 
     def predict_dialog_act(self, utterance):
+    ### Predict dialog act for given utterance
         custom_message_vec = vectorizer.transform([utterance])
         if SETTINGS.get('model')== 'LOG_REG':
             prediction = self.log_reg.predict(custom_message_vec)
@@ -147,7 +147,7 @@ class RestaurantRecommender():
             
         prediction_1d = np.array([prediction]).ravel() # Change shape to pacify a warning from LabelEncoder
         prediction_label = le.inverse_transform(prediction_1d)
-        print(f"PREDICTED: {prediction_label}")
+        #print(f"PREDICTED: {prediction_label}")
         
         return prediction_label
     
@@ -199,15 +199,18 @@ class RestaurantRecommender():
 
     def filter_restaurants(self, restaurants):
     ### Filter restaurants for ones matching special feature requests, like touristic, romantic etc. 
-    
+        filtered_restaurants = pd.DataFrame()
+        
         for r in restaurants.itertuples():
             inferred = utils.infer_properties([r.pricerange, r.food_quality, r.crowdedness, r.length_of_stay])
             if inferred.get(self.special_feature) is True:
-                return restaurants[restaurants.restaurantname == r.restaurantname]
+                filtered_restaurants.append(restaurants[restaurants.restaurantname == r.restaurantname])
+            
+        return filtered_restaurants
 
 
     def give_recommendation(self):
-    ### Output correct Restaurant Recommendation
+    ### Output of Restaurant Recommendation
         # Save the currently recommended restaurant
         self.current_recommendation = self.matching_restaurants.iloc[0]
 
@@ -236,7 +239,7 @@ class RestaurantRecommender():
         
     def extract_preferences(self, utterance,current_state):
     ### Extract preferences from the utterance of the user by means of fuzzy keyword matching
-        print(f"Extracting Preference {utterance}")
+        #print(f"Extracting Preference {utterance}")
         
         # Define list of keywords that we're looking to match
         keywords = {
@@ -270,22 +273,22 @@ class RestaurantRecommender():
                     continue
             if not bool (preferences):
                 # If no exact match, check fuzzy match  
-                print("fuzzy check")
+                #print("fuzzy check")
                 for option in options:
                     if utils.fuzzy_keyword_match(option, utterance):
                         if key is not preferences:
                             preferences[key]=option
-                            print(f"{key} fuzzily updated to {option}")
+                            #print(f"{key} fuzzily updated to {option}")
                         break
         if bool (preferences):
             for key, option in preferences.items(): 
                 setattr(self, key, option)
-                print(f"{key} updated to {option}")
+                #print(f"{key} updated to {option}")
                     
 
     def get_next_state(self, current_state, dialog_act:str = "none", user_utterance:str = ""):
         
-        print(f"Current State: {current_state}, Dialog Act: {dialog_act}")
+        #print(f"Current State: {current_state}, Dialog Act: {dialog_act}")
         if dialog_act == 'bye':
             return State.EXIT
         
