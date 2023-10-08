@@ -45,15 +45,7 @@ def infer_properties(restaurant_properties):
 def speak(text):
     os.system(f'say {text}')
 
-dont_care_words = ['any', 'dont care', 'doesnt matter', 'anywhere', 'whatever', 'all']
-def doesnt_care(self, utterance):
-        ### Check if there's an indication of 'don't care' sentiment in the utterance
-        
-        for word in dont_care_words:
-            if fuzzy_keyword_match(word, utterance):
-                return True
-            
-        return False
+dont_care_words = ['any', 'dontcare', 'doesntmatter', 'anywhere', 'whatever', 'all']
 
 def classifyRequest(utterance):
         if "address"  in utterance or "location" in utterance or "place" in utterance:
@@ -105,6 +97,8 @@ def extract_keyword(key,word):
 #The idea is that we go through the utterance and search for words that are correlated with the 3 different properties that we are trying to extract
 def pattern_matching(utterance):
     utterance=(utterance.replace(',', ''))
+    utterance=(utterance.replace("don't care", 'dontcare'))
+    utterance=(utterance.replace("doesn't matter", 'doesntmatter'))
     value=None
     res={}
     words = utterance.lower().split()
@@ -165,5 +159,5 @@ def pattern_matching(utterance):
 
 
 
-u="Find a Cuban restaurant, whatever price "
+u="Find a Cuban restaurant,  location doesn't matter "
 print(pattern_matching(u))
