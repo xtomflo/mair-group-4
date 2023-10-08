@@ -32,12 +32,12 @@ pip3 install --requirement requirements.txt
 
 To start the recommender chatbot:
 ```
-> python3 dialog_machine.py
+python3 dialog_machine.py
 ```
 
 To run model training, evaluation and error analysis:
 ```
-> python3 models.py
+python3 models.py
 ```
 
 
