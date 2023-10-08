@@ -289,7 +289,7 @@ class RestaurantRecommender():
                             preferences[key]=option
                             print(f"{key} fuzzily updated to {option}")
                         break
-        if not bool (preferences):
+        if bool (preferences):
             for key, option in preferences.items(): 
                 setattr(self, key, option)
                 print(f"{key} updated to {option}")

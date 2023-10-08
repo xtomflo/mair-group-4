@@ -87,6 +87,7 @@ def extract_keyword(key,word):
                     return (key,v)
     return (key,None)
 def pattern_matching(utterance):
+    value=None
     res={}
     words = utterance.lower().split()
     for (i,w) in enumerate(words):
@@ -143,7 +144,10 @@ def pattern_matching(utterance):
 
 u="I'm looking for a moderately priced restaurant in the west part of town"
 u2="I'm looking for a restaurant in any area that serves Tuscan food"
-print(pattern_matching(u))
-print(pattern_matching(u2))
+u3="Food italian"
+#print(pattern_matching(u))
+#print(pattern_matching(u2))
+
+print(pattern_matching(u3))
 
 
