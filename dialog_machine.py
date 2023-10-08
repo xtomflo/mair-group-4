@@ -144,7 +144,6 @@ class RestaurantRecommender:
             [prediction]
         ).ravel()  # Change shape to pacify a warning from LabelEncoder
         prediction_label = le.inverse_transform(prediction_1d)
-        print(f"PREDICTED: {prediction_label}")
 
         return prediction_label
 
@@ -270,7 +269,6 @@ class RestaurantRecommender:
             )
         # Remove the recommendation from the list of remaining ones
         self.matching_restaurants = self.matching_restaurants.iloc[1:]
-        print(self.matching_restaurants)
         self.info_provided = True
 
     def extract_preferences(self, utterance, current_state):
