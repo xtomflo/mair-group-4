@@ -21,7 +21,6 @@ SETTINGS = {
    'tts': False,
    'closest_match': False,
    'model': 'LOG_REG',
-   'skip_requirements': False,
    'use_special_features': False
 }
 
@@ -49,11 +48,7 @@ def collect_config():
     if use_special_features.lower() == 'y':
         SETTINGS['use_special_features'] = True
     
-    # Skip requirements
-    skip = input("Skip requirements? (y/n)\n")
-    if skip.lower() == 'y':
-        SETTINGS['skip_requirements'] = True
-
+ 
 
     # Print summary
     print("\nSelected configuration:")
@@ -61,7 +56,6 @@ def collect_config():
     print(f"- Closest Match: {SETTINGS['closest_match']}")
     print(f"- Model: {SETTINGS['model']}")
     print(f"- Special features: {SETTINGS['use_special_features']}")
-    print(f"- Skip Requirements: {SETTINGS['skip_requirements']}")
 
 
 class State(Enum):
@@ -96,6 +90,7 @@ class State(Enum):
 class RestaurantRecommender():
     
     def __init__(self):
+    ### Initialization of the class instance
         self.current_state = State.WELCOME
         # User preferences
         self.area = None
@@ -114,11 +109,13 @@ class RestaurantRecommender():
         self.restaurant_df = pd.read_csv('restaurant_info.csv')
     
     def clear_state(self):
+    ### When no match is found, state is clear to start the process of collecting preferences again
         self.area = None
         self.food_type = None
         self.price_range = None
     
     def output_utterance(self, system_utterance):
+    ### Generic output to handle Text-To-Speech functionality
         if SETTINGS.get('tts') is True:
             print(system_utterance)
             utils.speak(system_utterance)
@@ -139,6 +136,7 @@ class RestaurantRecommender():
         return dialog_act, user_utterance.lower()
 
     def predict_dialog_act(self, utterance):
+    ### Predict a dialog act for a given utterance based on a model that's been configured to use 
         custom_message_vec = vectorizer.transform([utterance])
         if SETTINGS.get('model')== 'LOG_REG':
             prediction = self.log_reg.predict(custom_message_vec)
@@ -270,22 +268,22 @@ class RestaurantRecommender():
                     continue
             if not bool (preferences):
                 # If no exact match, check fuzzy match  
-                print("fuzzy check")
+                #print("fuzzy check")
                 for option in options:
                     if utils.fuzzy_keyword_match(option, utterance):
                         if key is not preferences:
                             preferences[key]=option
-                            print(f"{key} fuzzily updated to {option}")
+                            #print(f"{key} fuzzily updated to {option}")
                         break
         if bool (preferences):
             for key, option in preferences.items(): 
                 setattr(self, key, option)
-                print(f"{key} updated to {option}")
+                #print(f"{key} updated to {option}")
                     
 
     def get_next_state(self, current_state, dialog_act:str = "none", user_utterance:str = ""):
         
-        print(f"Current State: {current_state}, Dialog Act: {dialog_act}")
+        #print(f"Current State: {current_state}, Dialog Act: {dialog_act}")
         if dialog_act == 'bye':
             return State.EXIT
         
@@ -380,7 +378,7 @@ class RestaurantRecommender():
                 return State.PROVIDE_RECOMMENDATION 
             
         elif current_state == State.CLASSIFY_REQUEST:
-            request_type = utils.classifyRequest(user_utterance)
+            request_type = utils.classify_request(user_utterance)
             if request_type == 'phone':
                 return State.CHECK_PHONE
             elif request_type == 'address':
@@ -490,7 +488,7 @@ class RestaurantRecommender():
                     
             elif next_state == State.NO_RESTAURANT:
                 # Inform there's no matches
-                self.output_utterance(f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range.")
+                self.output_utterance(f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} area in {string.capwords(self.price_range)} price range.")
                 self.output_utterance("Please try searching with differrent criteria")
                 
             elif next_state == State.PROVIDE_PHONE:

@@ -47,7 +47,7 @@ def speak(text):
 
 dont_care_words = ['any', 'dontcare', 'doesntmatter', 'anywhere', 'whatever', 'all']
 
-def classifyRequest(utterance):
+def classify_request(utterance):
         if "address"  in utterance or "location" in utterance or "place" in utterance:
             return "address"
         if "postcode"  in utterance or 'post code'in utterance or "postal" in utterance:
