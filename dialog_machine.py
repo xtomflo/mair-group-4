@@ -273,7 +273,6 @@ class RestaurantRecommender:
 
     def extract_preferences(self, utterance, current_state):
         ### Extract preferences from the utterance of the user by means of exact and fuzzy keyword matching
-        # print(f"Extracting Preference {utterance}")
 
         # Define list of keywords that we're looking to match
         keywords = {
@@ -327,6 +326,7 @@ class RestaurantRecommender:
             utterance = utterance.replace("asian", "asian oriental")
 
         preferences = utils.pattern_matching(utterance, current_state)
+        
         for key, options in keywords.items():
             # Check for exact match
             for option in options:
@@ -432,7 +432,7 @@ class RestaurantRecommender:
             return State.CHECK_RESTAURANT_NO2
 
         elif current_state == State.CHECK_RESTAURANT_NO2:
-            if self.matching_restaurants is not None:
+            if self.matching_restaurants.empty is False:
                 return State.PROVIDE_RECOMMENDATION
             else:
                 return State.NO_RESTAURANT
@@ -448,7 +448,7 @@ class RestaurantRecommender:
                 return State.PROVIDE_RECOMMENDATION
 
         elif current_state == State.CLASSIFY_REQUEST:
-            request_type = utils.classifyRequest(user_utterance)
+            request_type = utils.classify_request(user_utterance)
             if request_type == "phone":
                 return State.CHECK_PHONE
             elif request_type == "address":
