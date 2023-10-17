@@ -123,7 +123,8 @@ class RestaurantRecommender:
         ### General output function to enable Text-to-Speech
         if SETTINGS.get("tts") is True:
             print(system_utterance)
-            utils.speak(system_utterance, SETTINGS.get("gender"))
+            gender = SETTINGS.get("gender")
+            utils.speak(system_utterance,gender)
         else:
             print(system_utterance)
 
@@ -131,7 +132,8 @@ class RestaurantRecommender:
         ### Collecting user input and extracting the dialog_act
         if SETTINGS.get("tts") is True:
             print(system_utterance)
-            utils.speak(system_utterance)
+            gender = SETTINGS.get("gender")
+            utils.speak(system_utterance,gender)
             user_utterance = input("")
         else:
             user_utterance = input(system_utterance + "\n")
