@@ -73,9 +73,17 @@ def infer_properties(restaurant_properties):
     return inferred_properties
 
 
-def speak(text):
+def speak(text, gender):
     ### Default function for speech to text, limited to MacOS support.
-    os.system(f"say {text}")
+    male = "Daniel"
+    female = "Samantha"
+    
+    if gender == "female":
+        voice = "Samantha"
+    elif gender == "male":
+        voice = "Daniel"
+        
+    os.system(f"say -v {voice} {text}")
 
 
 def classify_request(utterance):

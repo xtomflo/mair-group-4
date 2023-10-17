@@ -10,12 +10,23 @@ import models
 
 
 SETTINGS = {
-    "tts": False,
-    "closest_match": False,
+    
+    # !!!!
+    # 
+    # Change this between "male" and "female"
+    #
+    # !!!!  
+    "gender": "male",
+    
+    #
+    # !!!!! ^^^^^  !!!!
+    #
+    
+    "tts": True,
+    "closest_match": True,
     "model": "LOG_REG",
     "use_special_features": True,
 }
-
 
 def collect_config():
     print("Choose configuration options:")
@@ -112,7 +123,7 @@ class RestaurantRecommender:
         ### General output function to enable Text-to-Speech
         if SETTINGS.get("tts") is True:
             print(system_utterance)
-            utils.speak(system_utterance)
+            utils.speak(system_utterance, SETTINGS.get("gender"))
         else:
             print(system_utterance)
 
@@ -121,7 +132,7 @@ class RestaurantRecommender:
         if SETTINGS.get("tts") is True:
             print(system_utterance)
             utils.speak(system_utterance)
-            user_utterance = input(">")
+            user_utterance = input("")
         else:
             user_utterance = input(system_utterance + "\n")
 
@@ -258,14 +269,7 @@ class RestaurantRecommender:
                 self.output_utterance(
                     f"Restaurant {string.capwords(self.current_recommendation.restaurantname) } serves {string.capwords(self.current_recommendation.food) } in the {self.current_recommendation.area} part of town and prices are {self.current_recommendation.pricerange}"
                 )
-
-        if self.special_feature is not None:
-            self.output_utterance(
-                f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range, which is also {string.capwords(self.special_feature)}")
-        else:
-            self.output_utterance(
-                f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range."
-            )
+                
         # Remove the recommendation from the list of remaining ones
         self.matching_restaurants = self.matching_restaurants.iloc[1:]
         self.info_provided = True
@@ -349,6 +353,7 @@ class RestaurantRecommender:
     def get_next_state(
         self, current_state, dialog_act: str = "none", user_utterance: str = ""
     ):
+        print(f"Current state{current_state}, dialog act: {dialog_act}")
         ### Main function for deciding the following state of the machine based on the current state and dialog act
 
         if dialog_act == "bye":
@@ -589,11 +594,11 @@ class RestaurantRecommender:
                 # Inform there's no matches
                 if self.special_feature is not None:
                     self.output_utterance(
-                    f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range, which is also {string.capwords(self.special_feature)}"
+                        f"Unfortunately we dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range, which is also {string.capwords(self.special_feature)}"
                     )
                 else:
                     self.output_utterance(
-                        f"Unfortunately we do dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range."
+                        f"Unfortunately we dont have a {string.capwords(self.food_type)} restaurant in the {string.capwords(self.area)} in {string.capwords(self.price_range)} price range."
                     )
                 self.output_utterance("Please try searching with differrent criteria")
 
@@ -633,7 +638,7 @@ class RestaurantRecommender:
 
 
 def main():
-    collect_config()
+    #collect_config()
 
     recommender = RestaurantRecommender()
 
