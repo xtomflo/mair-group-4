@@ -16,7 +16,7 @@ SETTINGS = {
     # Change this between "male" and "female"
     #
     # !!!!  
-    "gender": "male",
+    "gender": "female",
     
     #
     # !!!!! ^^^^^  !!!!
@@ -355,7 +355,6 @@ class RestaurantRecommender:
     def get_next_state(
         self, current_state, dialog_act: str = "none", user_utterance: str = ""
     ):
-        print(f"Current state{current_state}, dialog act: {dialog_act}")
         ### Main function for deciding the following state of the machine based on the current state and dialog act
 
         if dialog_act == "bye":
